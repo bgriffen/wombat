@@ -101,7 +101,6 @@ Feel free to reach out with questions or suggestions:
 - GitHub Issues: [https://github.com/bgriffen/wombat/issues](https://github.com/bgriffen/wombat/issues)
 - Contact: [@brendangriffen](http://www.twitter.com/brendangriffen)
 
-## Inspirations
 
 [^1]: Higgs C, Alderton A, Rozek J, Adlakha D, Badland H, Boeing G, Both A, Cerin E, Chandrabose M, Gruyter CD, Gunn L, Livera AD, Hinckson E, Liu S, Mavoa S, Sallis J, Simons K, Giles-Corti B. Policy-Relevant Spatial Inidicators of Urban Liveability And Sustainability: Scaling From Local to Global. Urban Policy and Research. 2022 2022/12//;40(4). en. doi:10.1080/08111146.2022.2076215.
 
