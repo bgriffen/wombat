@@ -12,7 +12,7 @@ def polygons_within_radius(gdf,lat,lon,radius):
 
         # Buffer center point by 10km radius (assuming the CRS is in degrees, 
         # if it's in meters, adjust the buffer value accordingly)
-        center_point.geometry = center_point.geometry.buffer(9/111.32) # Rough conversion from km to degrees
+        center_point.geometry = center_point.geometry.buffer(radius/111.32) # Rough conversion from km to degrees
 
         # Use spatial join to find polygons that intersect with buffered center point
         polygons_in_radius = sjoin(gdf, center_point, op='intersects')
@@ -25,11 +25,10 @@ class Boundary:
         
     def load(self,city):
         self.city = city
-        self.gdf = gpd.read_file(self.filename)
+        self.gdf_full = gpd.read_file(self.filename)
         self.set_radius()
         
     def set_radius(self,radius=10):
         latlon = helper.caplatlon[self.city]
         lat,lon = latlon[0],latlon[1]
-        self.gdf = polygons_within_radius(self.gdf,lat,lon,radius)
-
+        self.gdf = polygons_within_radius(self.gdf_full,lat,lon,radius)
