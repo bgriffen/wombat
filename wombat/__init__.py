@@ -5,5 +5,5 @@ __email__ = "@brendangriffen"
 
 from . import helper 
 from wombat.urbanity import Urbanity as Urbanity
-from wombat.datasets import Boundary as Boundary
+from wombat.boundary import Boundary as Boundary
 from wombat.wombat import Wombat as Wombat
