@@ -30,27 +30,32 @@ def polygons_within_radius(gdf,lat,lon,radius):
     return polygons_in_radius 
 
 class Boundary:
-    def __init__(self,dataset_path,dataset):
-        self.folder = os.path.join(dataset_path,"boundary")
+    def __init__(self,dataset_path,dataset,city):
+        self.dataset_path = dataset_path
         self.dataset = dataset
+        
+        self.folder = os.path.join(dataset_path,"boundary")
         self.filename = os.path.join(self.folder,"%s.geojson"%dataset)
-        self.gdf_full = gpd.read_file(self.filename)
-
-    def set_city(self,city,radius=None):
-        self.city = city
-        if radius is not None:
-            self.set_radius(radius)
-        else:
-            #search_string = "Greater " + self.city
-            #self.gdf = self.gdf_full[self.gdf_full['GCC_NAME21']==search_string]
-            mask_city = self.gdf_full['GCC_NAME21'].str.contains(self.city)
+        
+        fout = os.path.join(self.folder,self.dataset+"_"+f"{city}_boundary.geojson")
+        print(fout)
+        if not os.path.exists(fout):
+            self.gdf_full = gpd.read_file(self.filename)
+            mask_city = self.gdf_full['GCC_NAME21'].str.contains(city)
             self.gdf = self.gdf_full[mask_city]
+            self.gdf.to_file(fout)
+        else:
+            self.gdf = gpd.read_file(fout)
+      
+        #if radius is not None:
+        #    self.set_radius(radius)
+
         self.names = sorted(list(set(self.gdf['SA3_NAME21'])))
         
     def set_radius(self,radius=10):
         latlon = helper.caplatlon[self.city]
         lat,lon = latlon[0],latlon[1]
-        self.gdf = polygons_within_radius(self.gdf_full,lat,lon,radius)
+        self.gdf = polygons_within_radius(self.gdf,lat,lon,radius)
 
 class OpenStreetMap:
     def __init__(self,dataset_path):
