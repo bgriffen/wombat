@@ -2,15 +2,17 @@ import wombat.helper as helper
 import urbanity as urb
 import os
 import pickle
+
 class Urbanity:
     def __init__(self,dataset_path,city,zoom):
         self.dataset_path = dataset_path
         self.city = city
         self.zoom = zoom
         self.map = urb.Map(country="Australia",zoom=zoom)
-        self.ma .center = helper.caplatlon[city]
+        self.map.center = helper.caplatlon[city]
         self.pbf_path = os.path.join(self.dataset_path,"pbf","Australia.osm.pbf")
         self.tmp_file = 'tmp_region.geojson'
+        print(self.pbf_path)
         
     def define_region(self,gdf):
         gdf.to_file(self.tmp_file, driver='GeoJSON')
