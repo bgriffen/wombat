@@ -30,7 +30,7 @@ Output files will be saved in the same directory as the script.
 
 """
 
-def create_buffer(lat, lon, radius=20):
+def create_buffer(lat, lon, radius):
     """
     Function to create a circular buffer around a given point in geographic coordinates.
 
@@ -127,17 +127,22 @@ def combine_rows(df, quad_keys, aoi_shape):
 
     return combined_rows
 
-def make_footprints(city, dataset_path):
+
+def make_footprints(city, dataset_path,gdf=None,radius=None):
     df = pd.read_csv("https://minedbuildings.blob.core.windows.net/global-buildings/dataset-links.csv")
     df = df[df["Location"] == "Australia"]
-        
-    coordinates = helper.caplatlon[city]
-    lat, lon = coordinates
-    polygon = create_buffer(lat, lon) # Assuming these two functions are defined elsewhere.
-    aoi_geom = generate_geom(list(polygon))
-    print(f"The coordinates for {city} are: {polygon}")
-
-    aoi_shape = shapely.geometry.shape(aoi_geom)
+    
+    if radius is None and gdf is not None:
+        aoi_shape = gdf.unary_union
+        kind = 'full'
+    else:
+        kind = 'radius'
+        coordinates = helper.caplatlon[city]
+        lat, lon = coordinates
+        polygon = create_buffer(lat, lon,30)
+        aoi_geom = generate_geom(list(polygon))
+        print(f"The coordinates for {city} are: {polygon}")
+        aoi_shape = shapely.geometry.shape(aoi_geom)
     
     # Find bounds.
     minx, miny, maxx, maxy = aoi_shape.bounds
@@ -151,7 +156,7 @@ def make_footprints(city, dataset_path):
     # Combine writting into file.
     print(f"Saving file for {city}")
     schema = {"geometry": "Polygon", "properties": {"id": "int"}}
-    fout = os.path.join(dataset_path,f"{city}_building_footprints.geojson") 
+    fout = os.path.join(dataset_path,f"{city}_{kind}_building_footprints.geojson") 
     with fiona.open(
         fout,"w",
         driver="GeoJSON",
@@ -165,6 +170,6 @@ class Buildings:
         self.city = city
         self.dataset_path = dataset_path
         
-    def make_footprints(self):
-        make_footprints(city=self.city,dataset_path=self.dataset_path)
+    def make_footprints(self,gdf=None,radius=None):
+        make_footprints(city=self.city,dataset_path=self.dataset_path,gdf=gdf)
         
