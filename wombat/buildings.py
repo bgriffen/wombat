@@ -134,7 +134,7 @@ def make_footprints(city, dataset_path,gdf=None,radius=None):
     
     if radius is None and gdf is not None:
         aoi_shape = gdf.unary_union
-        kind = 'full'
+        kind = 'poly'
     else:
         kind = 'radius'
         coordinates = helper.caplatlon[city]
@@ -156,7 +156,7 @@ def make_footprints(city, dataset_path,gdf=None,radius=None):
     # Combine writting into file.
     print(f"Saving file for {city}")
     schema = {"geometry": "Polygon", "properties": {"id": "int"}}
-    fout = os.path.join(dataset_path,f"{city}_{kind}_building_footprints.geojson") 
+    fout = os.path.join(dataset_path,"footprints",f"{city}_{kind}_msft_footprints.geojson") 
     with fiona.open(
         fout,"w",
         driver="GeoJSON",
