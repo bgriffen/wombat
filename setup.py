@@ -7,5 +7,5 @@ setup(
     author="Brendan Griffen",
     author_email="@brendangriffen",
     packages=["wombat"],
-    # install_requires=['dependency1', 'dependency2'],
+    install_requires=['wget', 'tqdm'],
 )
