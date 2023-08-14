@@ -3,6 +3,7 @@ from geopandas.tools import sjoin
 from shapely.geometry import Point
 import wombat.helper as helper
 import os
+from wombat.datasets import Datasets,City
 
 def polygons_within_radius(gdf,lat,lon,radius):
     """Find polygons within a given radius of a center point.
@@ -29,19 +30,23 @@ def polygons_within_radius(gdf,lat,lon,radius):
     polygons_in_radius = sjoin(gdf, center_point, op='intersects')
     return polygons_in_radius 
 
-class Boundary:
-    def __init__(self,dataset_path,dataset,city):
+class Boundary(Datasets):
+    def __init__(self,dataset_path,city):
+        super().__init__(dataset_path,city)
         self.dataset_path = dataset_path
-        self.dataset = dataset
-        
+        self.dataset = "SA3_2021_AUST_GDA2020"
+        self.City = City(city)
         self.folder = os.path.join(dataset_path,"boundary")
-        self.filename = os.path.join(self.folder,"%s.geojson"%dataset)
+        self.filename = os.path.join(self.folder,"%s.geojson"%self.dataset)
         
-        fout = os.path.join(self.folder,self.dataset+"_"+f"{city}_boundary.geojson")
+        fout = os.path.join(self.folder,self.dataset+"_"+f"{self.City.name}_boundary.geojson")
         print(fout)
         if not os.path.exists(fout):
             self.gdf_full = gpd.read_file(self.filename)
-            mask_city = self.gdf_full['GCC_NAME21'].str.contains(city)
+            if self.City.name == "Canberra":  # Hacky handling to sort out beloved ACT/Canberra
+                mask_city = self.gdf_full['GCC_NAME21'].str.contains("Australian Capital Territory")
+            else:
+                mask_city = self.gdf_full['GCC_NAME21'].str.contains(self.City.name)
             self.gdf = self.gdf_full[mask_city]
             self.gdf.to_file(fout)
         else:
@@ -53,9 +58,7 @@ class Boundary:
         self.names = sorted(list(set(self.gdf['SA3_NAME21'])))
         
     def set_radius(self,radius=10):
-        latlon = helper.caplatlon[self.city]
-        lat,lon = latlon[0],latlon[1]
-        self.gdf = polygons_within_radius(self.gdf,lat,lon,radius)
+        self.gdf = polygons_within_radius(self.gdf,self.City.lat,self.City.lon,radius)
 
 class OpenStreetMap:
     def __init__(self,dataset_path):
@@ -68,4 +71,4 @@ class OpenStreetMap:
             boundary = Boundary(self.dataset_path)
             boundary.load()
             boundary.set_radius(20)
-            boundary.gdf.to_file(os.path.join(self.pbf_path,city+".geojson"), driver='GeoJSON')
+            boundary.gdf.to_file(os.path.join(self.pbf_path,city.name+".geojson"), driver='GeoJSON')
