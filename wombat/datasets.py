@@ -3,6 +3,7 @@ import os
 import geopandas as gpd
 import wombat.tools_buildings as tools_buildings
 
+
 caplatlon = {
     "Sydney": [-33.8688, 151.2093],
     "Melbourne": [-37.8136, 144.9631],
@@ -32,7 +33,8 @@ class Datasets:
         self.elevation_path = os.path.join(dataset_path,"elevation")
         self.school_path = os.path.join(dataset_path,"school")
         self.urbanity_path = os.path.join(dataset_path,"urbanity")
-
+        self.school_path = os.path.join(dataset_path,"school")
+        
         # OSM
         self.osm_footprint_filename = os.path.join(self.footprint_path,"osm",f"{city}.geojson")
         self.pbf_path = os.path.join(dataset_path,"pbf")
@@ -43,3 +45,14 @@ class Datasets:
         self.msft_footprints_filename = os.path.join(self.footprint_path,"microsoft","SA3",f"{city}.geojson")
 
         self.combined_footprints_filename = os.path.join(self.footprint_path,"full",f"{city}.geojson")
+        
+        # Schools
+        # catchments
+        self.school_junior_path = os.path.join(self.school_path,city,"2022_junior.json")
+        self.school_primary_path = os.path.join(self.school_path,city,"2022_primary.json")
+        self.school_senior_path = os.path.join(self.school_path,city,"2022_senior.json")
+        # all school info
+        self.school_info_filename = os.path.join(self.school_path,"school-location-2021.xlsx")
+        self.school_acara_filename = os.path.join(self.school_path,"school-profile-2021.xlsx")
+        
+        
