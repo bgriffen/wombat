@@ -31,31 +31,36 @@ def polygons_within_radius(gdf,lat,lon,radius):
     return polygons_in_radius 
 
 class Boundary(Datasets):
-    def __init__(self,dataset_path,city):
+    def __init__(self,dataset_path,city=None):
         super().__init__(dataset_path,city)
         self.dataset_path = dataset_path
         self.dataset = "SA3_2021_AUST_GDA2020"
-        self.City = City(city)
+
         self.folder = os.path.join(dataset_path,"boundary")
         self.filename = os.path.join(self.folder,"%s.geojson"%self.dataset)
         
-        fout = os.path.join(self.folder,self.dataset+"_"+f"{self.City.name}_boundary.geojson")
-        print(fout)
-        if not os.path.exists(fout):
-            self.gdf_full = gpd.read_file(self.filename)
-            if self.City.name == "Canberra":  # Hacky handling to sort out beloved ACT/Canberra
-                mask_city = self.gdf_full['GCC_NAME21'].str.contains("Australian Capital Territory")
+        if city is not None:
+            self.City = City(city)
+            print("Setting:",self.City.name)
+            fout = os.path.join(self.folder,self.dataset+"_"+f"{self.City.name}_boundary.geojson")
+            if not os.path.exists(fout):
+                self.gdf_full = gpd.read_file(self.filename)
+                if self.City.name == "Canberra":  # Hacky handling to sort out beloved ACT/Canberra
+                    mask_city = self.gdf_full['GCC_NAME21'].str.contains("Australian Capital Territory")
+                else:
+                    mask_city = self.gdf_full['GCC_NAME21'].str.contains(self.City.name)
+                self.gdf = self.gdf_full[mask_city]
+                self.gdf.to_file(fout)
             else:
-                mask_city = self.gdf_full['GCC_NAME21'].str.contains(self.City.name)
-            self.gdf = self.gdf_full[mask_city]
-            self.gdf.to_file(fout)
-        else:
-            self.gdf = gpd.read_file(fout)
-      
-        #if radius is not None:
-        #    self.set_radius(radius)
+                self.gdf = gpd.read_file(fout)
+        
+            #if radius is not None:
+            #    self.set_radius(radius)
 
-        self.names = sorted(list(set(self.gdf['SA3_NAME21'])))
+            self.names = sorted(list(set(self.gdf['SA3_NAME21'])))
+    
+    def load_states_territories(self):
+        self.gdf_states_territories = gpd.read_file(self.boundary_path_states_territories)
         
     def set_radius(self,radius=10):
         self.gdf = polygons_within_radius(self.gdf,self.City.lat,self.City.lon,radius)
