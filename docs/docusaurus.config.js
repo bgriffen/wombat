@@ -7,7 +7,7 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'Wombat',
-  tagline: 'Wombats get the job done',
+  tagline: 'A no nonsense geospatial toolkit for Australia, written in Python',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
