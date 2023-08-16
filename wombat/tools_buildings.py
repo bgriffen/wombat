@@ -130,7 +130,7 @@ def calc_intersection_between_msft_and_osm(buildings_msft_gdf,osm_buildings,fout
     print(fout)
     unique_buildings_reduced = unique_buildings[['id','is_osm','geometry']]
     if fout is not None:
-        output.to_file(fout)
+        unique_buildings_reduced.to_file(fout)
     return unique_buildings_reduced
 
 
