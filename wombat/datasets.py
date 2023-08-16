@@ -22,12 +22,10 @@ class City:
         self.lon = caplatlon[name][1]
 
 class Datasets:
-    def __init__(self,dataset_path,city):
+    def __init__(self,dataset_path,city=None):
         self.dataset_path = dataset_path
-        #self.city = City(city)
 
         self.footprint_path = os.path.join(dataset_path,"footprints")
-
 
         self.boundary_path = os.path.join(dataset_path,"boundary")
         self.elevation_path = os.path.join(dataset_path,"elevation")
@@ -35,24 +33,27 @@ class Datasets:
         self.urbanity_path = os.path.join(dataset_path,"urbanity")
         self.school_path = os.path.join(dataset_path,"school")
         
+        self.boundary_path_states_territories = os.path.join(dataset_path,"boundary","STE_2021_AUST_GDA2020.geojson")
+        
         # OSM
-        self.osm_footprint_filename = os.path.join(self.footprint_path,"osm",f"{city}.geojson")
         self.pbf_path = os.path.join(dataset_path,"pbf")
         self.pbf_filename = os.path.join(dataset_path,"pbf","australia-latest.osm.pbf")
 
         # Microsoft
         self.msft_path = os.path.join(self.footprint_path,'microsoft_buildings')
-        self.msft_footprints_filename = os.path.join(self.footprint_path,"microsoft","SA3",f"{city}.geojson")
-
-        self.combined_footprints_filename = os.path.join(self.footprint_path,"full",f"{city}.geojson")
-        
-        # Schools
-        # catchments
-        self.school_junior_path = os.path.join(self.school_path,city,"2022_junior.json")
-        self.school_primary_path = os.path.join(self.school_path,city,"2022_primary.json")
-        self.school_senior_path = os.path.join(self.school_path,city,"2022_senior.json")
         # all school info
         self.school_info_filename = os.path.join(self.school_path,"school-location-2021.xlsx")
         self.school_acara_filename = os.path.join(self.school_path,"school-profile-2021.xlsx")
         
+        # Elevation
+        self.elevation_tif_filename = os.path.join(self.elevation_path,"srtm-1sec-dems-v1-COG.tif")
         
+        if city is not None:
+            # Schools
+            # catchments
+            self.school_junior_path = os.path.join(self.school_path,city,"2022_junior.json")
+            self.school_primary_path = os.path.join(self.school_path,city,"2022_primary.json")
+            self.school_senior_path = os.path.join(self.school_path,city,"2022_senior.json")
+            self.osm_footprint_filename = os.path.join(self.footprint_path,"osm","new",f"{city}.geojson")
+            self.msft_footprints_filename = os.path.join(self.footprint_path,"microsoft","SA3",f"{city}.geojson")
+            self.combined_footprints_filename = os.path.join(self.footprint_path,"full",f"{city}.geojson")
