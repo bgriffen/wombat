@@ -67,7 +67,9 @@ class Viz(Datasets):
         #self.map.center = country_center
         self.map.center = (self.City.lat,self.City.lon)
         self.map.zoom = zoom
-
+        self.map.layout.height = "800px"
+        self.map.layout.width = "100%"
+        
         self.buildings_gdf_full = None
         #self.mapbox_token = mapbox_token
 
@@ -87,7 +89,10 @@ class Viz(Datasets):
         self.map = leafmap.Map()
         self.map.center = (self.City.lat,self.City.lon)
         self.map.zoom = 14
-
+        self.map.layout.height = "800px"
+        self.map.layout.width = "100%"
+        self.map.center = (self.City.lat,self.City.lon)
+        
     def load(self):
         print("Loading in the building footprints...")
         #if os.path.exists(self.combined_footprints_filename):
