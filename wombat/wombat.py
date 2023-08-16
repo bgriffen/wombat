@@ -3,7 +3,9 @@ from wombat.urbanity import Urbanity
 from wombat.boundary import Boundary
 from wombat.buildings import Buildings
 from wombat.visualise import Viz
-#from wombat.datasets import Datasets
+from wombat.schools import Schools
+from wombat.datasets import Datasets
+from wombat.elevation import Elevation
 import os
 import warnings
 from shapely.errors import ShapelyDeprecationWarning
@@ -17,19 +19,26 @@ warnings.filterwarnings('ignore')
 
 from wombat.datasets import City
 
+import platform
 class Wombat:
     # Initializing Wombat class with dataset_path and zoom level defaulting to 10
     def __init__(self,dataset_path,zoom=10):
+
         self.zoom = zoom
         self.dataset_path = dataset_path
-
+        self.Datasets = Datasets(self.dataset_path)
+        self.Boundary = Boundary(self.dataset_path)
+        self.Elevation = Elevation(self.dataset_path)
+        
     # Method to set the city for analysis and initialize Urbanity object instance
     def set_city(self,city,radius=None):
         self.Boundary = Boundary(self.dataset_path,city=city)
         self.Urbanity = Urbanity(dataset_path=self.dataset_path,city=city)
         self.Buildings = Buildings(dataset_path=self.dataset_path,city=city)
         self.Viz = Viz(dataset_path=self.dataset_path,city=city,zoom=self.zoom)
-
+        self.Schools = Schools(dataset_path=self.dataset_path,city=city)
+        self.Elevation = Elevation(dataset_path=self.dataset_path,city=city)
+        
     def load(self):
         self.Viz.load()
         
