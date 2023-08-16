@@ -8,3 +8,4 @@ from wombat.wombat import Wombat as Wombat
 from wombat.buildings import Buildings as Buildings
 from wombat.visualise import Viz as Viz
 from wombat.datasets import Datasets as Datasets
+from wombat.elevation import Elevation as Elevation
