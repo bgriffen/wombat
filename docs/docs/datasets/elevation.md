@@ -173,15 +173,3 @@ for fname in list(set(df['zipfile_name'])):
     wget.download(url_full,output_folder)
 ```
 
-
-
-import wombat
-w = wombat.Wombat()
-lat,lon = wombat.datasets.caplatlon['Adelaide']
-w.Elevation.get_elevation([lon],[lat])
-w.Elevation.make_section(lon, lat, box_width_km=100)
-#w.Elevation.plot_elevation(include_points=True)
-#w.Boundary.load_states_territories()
-#gdf = w.Boundary.gdf_states_territories
-#w.Elevation.plot_elevation(include_points=True) #,gdf=gdf
-w.Elevation.save_section()
