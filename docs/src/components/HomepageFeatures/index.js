@@ -9,17 +9,16 @@ const FeatureList = [
     description: (
       <>
         Wombat was designed from the ground up to be easily installed and
-        used to answer your geospatial questions.
+        used to answer geospatial questions about Australia.
       </>
     ),
   },
   {
-    title: 'No Nonsense',
+    title: 'For The Data Scientist',
     Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
     description: (
       <>
-        Wombat is designed to be used by data scientists who
-        want to answer questions about Australian capital cities.
+        Wombat gives you the tools you need to perform a wide range of queries about Australian capital cities.
       </>
     ),
   },
