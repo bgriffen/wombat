@@ -18,7 +18,7 @@ const FeatureList = [
     Svg: require('@site/static/img/undraw_docusaurus_tree.svg').default,
     description: (
       <>
-        Wombat is designed to be used by data scientists and tinkerers who
+        Wombat is designed to be used by data scientists who
         want to answer questions about Australian capital cities.
       </>
     ),
