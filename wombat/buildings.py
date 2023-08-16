@@ -9,7 +9,7 @@ import wombat.tools_buildings as tools_buildings
 from wombat.datasets import Datasets,City
 
 class Buildings(Datasets):
-    def __init__(self, dataset_path,city):   #(self,city,dataset_path,kind='poly',region="Australia"):
+    def __init__(self, dataset_path,city):  
         super().__init__(dataset_path,city)
         self.City = City(city)
         #self.city = city
@@ -42,7 +42,9 @@ class Buildings(Datasets):
 
     def calc_overlaps(self):
         #tools_buildings.calc_overlaps(self.msft_buildings,self.osm_buildings)
-        self.unique_buildings = tools_buildings.calc_intersection_between_msft_and_osm(self.msft_buildings,self.osm_buildings)
+        self.unique_buildings = tools_buildings.calc_intersection_between_msft_and_osm(self.msft_buildings,
+                                                                                       self.osm_buildings,
+                                                                                       fout=self.combined_footprints_filename)
 
         # old way from downloading files
         # fout = os.path.join(self.msft_path,self.region+".json.gz")
