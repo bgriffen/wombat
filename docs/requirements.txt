@@ -5,6 +5,6 @@ markdown>=3.2
 pymdown-extensions
 mkdocs-material-extensions
 mkdocstrings
-git-revision-date
-mkdocs-jupyter
-git-revision-date-localized
+git-revision-date>=0.3
+mkdocs-jupyter>=0.16
+git-revision-date-localized>=1.2
