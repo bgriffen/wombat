@@ -39,18 +39,18 @@ theme:
 
 nav:
     - Home: index.md
-    - Home2: ../../README.md
-    - Basics:
-        - Installation: installation.md
-        - Getting Started: getting-started.md
-        - Available Datasets: available-datasets.md
-    - Concepts:
-        - Statistical Areas: statisticalareas.md
-    - Methods:
-        - Buildings: buildings.md
-        - Elevation: elevation.md
-    - Notebooks: 
-        - Test: test.ipynb
+#    - Home2: ../../README.md
+#    - Basics:
+#        - Installation: installation.md
+#        - Getting Started: getting-started.md
+#        - Available Datasets: available-datasets.md
+#  - Concepts:
+#       - Statistical Areas: statisticalareas.md
+#    - Methods:
+#        - Buildings: buildings.md
+#        - Elevation: elevation.md
+#    - Notebooks: 
+#        - Test: test.ipynb
 
 features:
   - navigation.instant
