@@ -1,0 +1,99 @@
+site_name: wombat
+site_description: A Python package for interactive mapping and geospatial analysis of Australian cities and regions
+site_author: Brendan Griffen
+site_url: https://wombat.grifflabs.dev
+
+repo_url: https://github.com/bgriffen/wombat
+
+copyright: "Copyright &copy; 2021 - 2023 Brendan Griffen"
+
+theme:
+    palette:
+        - scheme: default
+          #   primary: blue
+          #   accent: indigo
+          toggle:
+              icon: material/toggle-switch-off-outline
+              name: Switch to dark mode
+        - scheme: slate
+          primary: indigo
+          accent: indigo
+          toggle:
+              icon: material/toggle-switch
+              name: Switch to light mode
+    name: material
+    icon:
+        repo: fontawesome/brands/github
+    #logo: assets/logo.png
+    #favicon: assets/favicon.png
+    features:
+        - navigation.instant
+        - navigation.tracking
+        - navigation.top
+        - search.highlight
+        - search.share
+    #custom_dir: "docs/overrides"
+    font:
+        text: Google Sans
+        code: Regular
+
+nav:
+    - Home: index.md
+    - Home2: ../../README.md
+    - Basics:
+        - Installation: installation.md
+        - Getting Started: getting-started.md
+        - Available Datasets: available-datasets.md
+    - Concepts:
+        - Statistical Areas: statisticalareas.md
+    - Methods:
+        - Buildings: buildings.md
+        - Elevation: elevation.md
+    - Notebooks: 
+        - Test: test.ipynb
+
+features:
+  - navigation.instant
+
+plugins:
+    - search
+    - mkdocstrings
+    - git-revision-date
+    - git-revision-date-localized:
+          enable_creation_date: true
+          type: timeago
+    # - pdf-export
+    - mkdocs-jupyter:
+          include_source: True
+          ignore_h1_titles: True
+          execute: False
+          include_requirejs: true
+          allow_errors: false
+          ignore: ["conf.py", "data/README.md", "usage.md"]
+          execute_ignore:
+              [
+                  "*.ipynb",
+              ]
+
+markdown_extensions:
+    - admonition
+    - abbr
+    - attr_list
+    - pymdownx.emoji:
+        emoji_index: !!python/name:materialx.emoji.twemoji
+        emoji_generator: !!python/name:materialx.emoji.to_svg
+    - def_list
+    - footnotes
+    - meta
+    - md_in_html
+    - tables
+    - pymdownx.superfences
+    - pymdownx.highlight:
+          linenums: false
+    - toc:
+          permalink: true
+
+
+extra_javascript:
+    - javascripts/embed-amd.js
+    - javascripts/require.min.js
