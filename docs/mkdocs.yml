@@ -49,8 +49,8 @@ nav:
 #    - Methods:
 #        - Buildings: buildings.md
 #        - Elevation: elevation.md
-#    - Notebooks: 
-#        - Test: test.ipynb
+    - Notebooks: 
+        - Test: test.ipynb
 
 features:
   - navigation.instant
