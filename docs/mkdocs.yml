@@ -50,7 +50,7 @@ nav:
 #        - Buildings: buildings.md
 #        - Elevation: elevation.md
     - Notebooks: 
-        - Test: test.ipynb
+        - Boundaries: Boundaries.ipynb
 
 features:
   - navigation.instant
