@@ -2,7 +2,7 @@
 title: ""
 ---
 
-![Wombat logo](/img/wombat.png)
+![Wombat logo](/assets/wombat.png)
 
 [![Build Status](https://travis-ci.com/bgriffen/wombat.svg?branch=master)](https://travis-ci.com/bgriffen/wombat)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
