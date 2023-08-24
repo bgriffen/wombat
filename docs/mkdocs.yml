@@ -24,8 +24,8 @@ theme:
     name: material
     icon:
         repo: fontawesome/brands/github
-    logo: assets/wombat.png
-    favicon: assets/favicon.ico
+    logo: assets/favicon.png
+    favicon: assets/favicon.png
     features:
         - navigation.instant
         - navigation.tracking
