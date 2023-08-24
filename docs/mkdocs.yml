@@ -93,3 +93,5 @@ markdown_extensions:
     - toc:
           permalink: true
 
+extra:
+  generator: false
