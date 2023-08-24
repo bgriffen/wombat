@@ -5,7 +5,7 @@ site_url: https://wombat.grifflabs.dev
 
 repo_url: https://github.com/bgriffen/wombat
 
-copyright: "Copyright &copy; 2021 - 2023 Brendan Griffen"
+copyright: "Copyright &copy; 2023 Brendan Griffen"
 
 theme:
     palette:
@@ -95,3 +95,10 @@ markdown_extensions:
 
 extra:
   generator: false
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/bgriffen
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/brendangriffen
+    - icon: fontawesome/brands/discord
+      link: https://discord.gg/pmM5V2S6
