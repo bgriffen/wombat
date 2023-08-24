@@ -1,5 +1,5 @@
 site_name: wombat
-site_description: A Python package for interactive mapping and geospatial analysis of Australian cities and regions
+site_description: A Python package for interactive mapping and geospatial analysis of Australian cities and regions.
 site_author: Brendan Griffen
 site_url: https://wombat.grifflabs.dev
 
@@ -24,8 +24,8 @@ theme:
     name: material
     icon:
         repo: fontawesome/brands/github
-    #logo: assets/logo.png
-    #favicon: assets/favicon.png
+    logo: assets/wombat.png
+    favicon: assets/favicon.ico
     features:
         - navigation.instant
         - navigation.tracking
@@ -104,4 +104,4 @@ extra:
       name: Twitter
     - icon: fontawesome/brands/discord
       link: https://discord.gg/pmM5V2S6
-      name: wombat on Discord
+      name: Discord
