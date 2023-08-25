@@ -1,16 +1,15 @@
-import folium
-from folium import GeoJson
-from folium import Rectangle
+#import folium
+#from folium import GeoJson
+#from folium import Rectangle
 from shapely.ops import transform
 import wombat.helper as helper
 import geopandas as gpd
 import os
 import shapely
 from wombat.datasets import Datasets,City
-import leafmap
+#import leafmap.foliumap as leafmap
 import math
-import urbanity
-
+#import folium
 import json
 from urllib.error import HTTPError
 import wombat.tools_buildings as tools_buildings
@@ -23,7 +22,6 @@ def new_map(center_latitude, center_longitude,mapbox_token,zoom):
             name='Mapbox Aerial',
         ).add_to(folium_map)
     return folium_map
-
 
 
 def get_bounding_box(latitude, longitude, distance_in_kms):
@@ -57,18 +55,16 @@ def filter_gdf_bbox(gdf, minx, miny, maxx, maxy):
 
 import pandas as pd
 
-class Viz(Datasets):
-    def __init__(self, dataset_path,city,zoom=14,kind='poly',mapbox_token=None):
-        super().__init__(dataset_path,city)
+class Viz:
+    def __init__(self, dataset_path,city,zoom=14):
+        #super().__init__(dataset_path,city)
         #self.map = new_map(center_latitude, center_longitude,mapbox_token,zoom=zoom)
         self.City = City(city)
-        self.map = leafmap.Map()
-        #country_center = urbanity.utils.get_country_centroids()['Australia']['coords']
-        #self.map.center = country_center
-        self.map.center = (self.City.lat,self.City.lon)
-        self.map.zoom = zoom
-        self.map.layout.height = "800px"
-        self.map.layout.width = "100%"
+        #self.map = leafmap.Map() #location=[self.City.lat,self.City.lon],zoom_start=zoom) #,height="700px",width="100%")
+        #self.map.center = ()
+        #self.map.zoom = zoom
+        #self.map.layout.height = "800px"
+        #self.map.layout.width = "100%"
         
         self.buildings_gdf_full = None
         #self.mapbox_token = mapbox_token
@@ -85,30 +81,11 @@ class Viz(Datasets):
             legend_name=legend_name,
         ).add_to(self.map)   
 
-    def reset_map(self):
-        self.map = leafmap.Map()
-        self.map.center = (self.City.lat,self.City.lon)
-        self.map.zoom = 14
-        self.map.layout.height = "800px"
-        self.map.layout.width = "100%"
-        self.map.center = (self.City.lat,self.City.lon)
-        
-    def load(self):
-        print("Loading in the building footprints...")
-        #if os.path.exists(self.combined_footprints_filename):
-            #print("...combined")
-            #self.buildings_gdf_combined = gpd.read_file(self.combined_footprints_filename)
-        if os.path.exists(self.msft_footprints_filename):
-            print("...Microsoft")
-            self.buildings_gdf_msft = gpd.read_file(self.msft_footprints_filename)
-            self.buildings_gdf_msft['is_osm'] = False
-        if os.path.exists(self.osm_footprint_filename):
-            print("...OSM")
-            self.buildings_gdf_osm = gpd.read_file(self.osm_footprint_filename)
-            self.buildings_gdf_msft['is_osm'] = True
-
         self.buildings_gdf_combined = tools_buildings.calc_intersection_between_msft_and_osm(self.buildings_gdf_msft,self.buildings_gdf_osm)
-
+    
+    def add_gdf(self,gdf):
+        self.map.add_gdf(gdf)
+        
     def add_building_layer(self,which=None,nbuildings=None,bounding_box=False,bbox_width=1000,center_latlon=None,reset=True):
         if reset:
             self.reset_map()
