@@ -12,15 +12,9 @@ class Buildings(Datasets):
     def __init__(self, dataset_path,city):  
         super().__init__(dataset_path,city)
         self.City = City(city)
-        #self.city = city
-        #self.kind = kind
-        #self.dataset_path = os.path.join(dataset_path,"footprints")
-        #self.msft_path = os.path.join(dataset_path,'footprints','microsoft_buildings')
-        #self.pbf_path = os.path.join(dataset_path,'pbf/')
-        #self.msft_footprints_filename = os.path.join(self.dataset_path,f"{self.city}_{kind}_msft_footprints.geojson")
-        #self.osm_footprint_filename = os.path.join(dataset_path,'footprints',f"{self.city}_osm_footprints.geojson")
-        #self.region = region
-        #self.buildings_msft_gdf = None
+        self.msft_buildings = None
+        self.osm_buildings = None
+        self.builings = None
 
     def make_footprints(self,gdf=None,radius=None):
         tools_buildings.make_footprints(city=self.City.name,dataset_path=self.dataset_path,gdf=gdf,radius=radius)
@@ -36,15 +30,25 @@ class Buildings(Datasets):
 #        df = df[df["Location"] == self.region]
 #        download_urls(list(df['Url']),self.msft_path)
 
-    def load(self,download=False):
-        self.msft_buildings = gpd.read_file(self.msft_footprints_filename)
-        self.osm_buildings = tools_buildings.get_or_make_osm_footprints(self.City.name,self.pbf_path,self.osm_footprint_filename)
+    def load(self,load_osm=False,load_msft=False,load_combined=True):
+        
+        if os.path.exists(self.msft_footprints_filename) and load_msft:
+            print("...Microsoft")
+            self.buildings_msft = gpd.read_file(self.msft_footprints_filename,drive="GeoJSON",engine='pyogrio')
+            self.buildings_msft['is_osm'] = False
+            
+        if os.path.exists(self.osm_footprint_filename) and load_osm:
+            print("...OSM")
+            self.buildings_osm = gpd.read_file(self.osm_footprint_filename,drive="GeoJSON",engine='pyogrio')
+            self.buildings_osm['is_osm'] = True
+            
+        if os.path.exists(self.combined_footprints_filename) and load_combined:
+            self.buildings_gdf_combined = gpd.read_file(self.combined_footprints_filename,drive="GeoJSON",engine='pyogrio')
 
     def calc_overlaps(self):
-        #tools_buildings.calc_overlaps(self.msft_buildings,self.osm_buildings)
-        self.unique_buildings = tools_buildings.calc_intersection_between_msft_and_osm(self.msft_buildings,
-                                                                                       self.osm_buildings,
-                                                                                       fout=self.combined_footprints_filename)
+        self.buildings = tools_buildings.calc_intersection_between_msft_and_osm(self.buildings_msft,
+                                                                                self.buildings_osm,
+                                                                                fout=self.combined_footprints_filename)
 
         # old way from downloading files
         # fout = os.path.join(self.msft_path,self.region+".json.gz")
