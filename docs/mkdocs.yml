@@ -51,6 +51,7 @@ nav:
 #        - Elevation: elevation.md
     - Notebooks: 
         - Boundaries: Boundaries.ipynb
+        - Schools: Schools.ipynb
 
 features:
   - navigation.instant
@@ -69,7 +70,7 @@ plugins:
           execute: False
           include_requirejs: true
           allow_errors: false
-          ignore: ["conf.py", "data/README.md", "usage.md"]
+          ignore: ["conf.py",".ipynb/*", "data/README.md", "usage.md"]
           execute_ignore:
               [
                   "*.ipynb",
