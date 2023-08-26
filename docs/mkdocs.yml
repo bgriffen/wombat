@@ -52,6 +52,7 @@ nav:
     - Notebooks: 
         - Boundaries: Boundaries.ipynb
         - Schools: Schools.ipynb
+        - Buildings: Buildings.ipynb
 
 features:
   - navigation.instant
