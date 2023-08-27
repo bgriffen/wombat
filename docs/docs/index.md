@@ -20,7 +20,7 @@ Lastly, this builds of the shoulders of many other works[^1][^2][^3][^4][^5] - t
 
 ## Features
 
-- [x] Purpose built for Australian cities, incorporating government, open and post-processed datasets.
+- [x] Purpose built for Australian cities, incorporating government, open and custom datasets.
 - [x] Built for data scientists, interested in building urban models (rather than overlays^N).
 - [x] Interactive visualisations using [leafmap](https://leafmap.org/) (ipyleaflet, folium backends)
 - [x] Powered by Python with direct access to [GeoPandas](https://geopandas.org/en/stable/) dataframes for your custom analyses.
