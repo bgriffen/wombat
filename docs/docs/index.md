@@ -17,9 +17,50 @@ Many geospatial projects are leviathans in their deployment with high interdepen
 
 Lastly, this builds of the shoulders of many other works[^1][^2][^3][^4][^5] - thank you.
 
+## Features
+
+- [x] Purpose built for Australian cities, incorporating government, open and post-processed datasets.
+- [x] Built for data scientists, interested in building urban models (rather than overlays^N).
+- [x] Interactive visualisations using [leafmap](https://leafmap.org/) (ipyleaflet, folium backends)
+- [x] Powered by Python with direct access to [GeoPandas](https://geopandas.org/en/stable/) dataframes for your custom analyses.
+- [x] Standardized post-processed datasets for local and rapid processing, including
+    * [x] Combined [OSM + Microsoft building footprints](/building), including LiDAR height data
+    * [x] Historical property sale history for major cities (1M+ properties)
+    * [x] Points of interest combining OSM + Overture datasets
+    * [x] Instant [30m resolution Digital Elevation Models](/elevation) (+viewsheds)
+    * [x] [ACARA](https://www.acara.edu.au/) school performance metrics and overlays
+    * [x] Socioeconomic ([SEIFA](https://www.abs.gov.au/websitedbs/censushome.nsf/home/seifa)) indices for different regions
+    * [x] [Pandana](https://github.com/UDST/pandana)+[UrbanAccess](https://udst.github.io/urbanaccess/index.html) transportation network analytics
+    * [x] [OSMX](https://osmnx.readthedocs.io/en/stable/) walkability analytics
+    * [x] [Urbanity](https://github.com/winstonyym/urbanity) urban analytics
+- [ ] Coming datasets:
+    * [ ] Flooding data    
+    * [ ] Noise data    
+    * [ ] Heritage data
+    * [ ] Green space assortivity indices
+    * [ ] CENSUS data
+- [ ] Coming tools:
+    * [ ] Machine learning property price prediction model    
+    * [ ] Livible cities benchmarks e.g. [Higgs et al. 2023](https://www.nature.com/articles/s41597-023-02013-5)
+
+## Datasets
+
+wombat draws on a number of off-the-shelf datasets as well as post-processed datasets. Nearly all datasets of siginificant size are stored locally. In some cases, datsets are streamed from various online sources but only where the bandwidth requirements are modest (e.g. population tile data). The data sources can be broken down into broadly three categories, Government, Public, post-processed.
+
+| Dataset  | Goverment | Open | Brisbane | Sydney | Melbourne | Perth | Adelaide | Hobart | Canberra | Darwin |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| Addresses |  | [G-NAF](https://geoscape.com.au/data/g-naf/) | :material-check: | :material-check: | :material-check: | :material-check: | :material-check: | :material-check: | :material-check: | :material-check: |
+| Elevation | [GeoScience Australia](https://www.ga.gov.au/scientific-topics/national-location-information/topographic-maps-data/topographic-maps), [ELVIS](https://elevation.fsdf.org.au/) | [TessaDSM](https://tessadem.com), [FABDEM](https://research-information.bris.ac.uk/en/datasets/fabdem-v1-2) | :material-check: | :material-check: | :material-check: | :material-check: | :material-check: | :material-check: | :material-check: | :material-check: |
+| Education | [ACARA](https://acara.edu.au/contact-us/acara-data-access) | | :material-check: | :material-check: | :material-check: | :material-check: | :material-check: | :material-check: | :material-check: | :material-check: |
+| Population | [ABS](https://maps.abs.gov.au/) | [Meta HDX](https://dataforgood.facebook.com/dfg/docs/high-resolution-population-density-maps-demographic-estimates-documentation#how-to-access-data) | :material-check: | :material-check: | :material-check: | :material-check: | :material-check: | :material-check: | :material-check: | :material-check: |
+| Buildings |  | [Overture](https://overturemaps.org/), [OSM Buildings](https://osmbuildings.org/), [Microsoft](https://github.com/microsoft/GlobalMLBuildingFootprints) | :material-check: | :material-check: | :material-check: | :material-check: | :material-check: | :material-check: | :material-check: | :material-check: |
+| POIs | | [Overture](https://overturemaps.org/), [OSM POIs](https://openpoimap.org/) | :material-check: | :material-check: | :material-check: | :material-check: | :material-check: | :material-check: | :material-check: | :material-check: |
+| Transport | |  [GTFS](https://gtfs.org/) | :material-check: | :material-close: | :material-close: | :material-close: | :material-close: | :material-close: | :material-close: | :material-close: |
+| Noise | |  [GTFS](https://www.data.brisbane.qld.gov.au/data/dataset/city-plan-2014-transport-noise-corridor-overlay) | :material-check: | :material-close: | :material-close: | :material-close: | :material-close: | :material-close: | :material-close: | :material-close: |
+
 ## License
 
-wombat is distributed under the MIT License.
+wombat is distributed under the [MIT License](https://github.com/bgriffen/wombat/blob/main/LICENSE).
 
 ## Contact
 
