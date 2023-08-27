@@ -1,10 +1,11 @@
 
 ![My Logo](wombat.png)
 
-[![Build Status](https://travis-ci.com/yourusername/yourpackagename.svg?branch=master)](https://travis-ci.com/bgriffen/wombat)
+[![Build Status](https://travis-ci.com/bgriffen/wombat.svg?branch=master)](https://travis-ci.com/bgriffen/wombat)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
- Wombat is a Python toolkit designed help answer geospatial related questions about Australian cities & regions. A simple to use set of functionalities enable the querying of of a large number of open-source datasets *simultaneously*. These datasets range from aerial imagery, building morphology, census information (e.g. demographics), points of interest, elevation, flooding, education, property sale history and transport networks. The goal of wombat is to make it a good means to an ends, such that data products can be easily fed into other downstream geospatial analyses and visualisations.
+Wombat is a Python toolkit designed help answer geospatial related questions about Australian cities & regions. A simple to use set of functionalities enable the querying of of a large number of open-source datasets *simultaneously*. These datasets range from aerial imagery, building morphology, census information (e.g. demographics), points of interest, elevation, flooding, education, property sale history and transport networks. The goal of wombat is to make it a good means to an ends, such that data products can be easily fed into other downstream geospatial analyses and visualisations.
+
 
  ## ⛏️ Motivation
 
@@ -16,19 +17,61 @@
 
 ## 📖 Table of Contents
 
+- [Features](#features)
+- [Datasets](#datasets)
 - [Installation](#installation)
 - [Usage](#usage)
-- [Features](#features)
 - [Contributing](#contributing)
 - [License](#license)
 - [Contact](#contact)
 
+## 📐 Features
+
+- [x] Purpose built for Australian cities, incorporating government, open and post-processed datasets.
+- [x] Built for data scientists, interested in building urban models (rather than overlays^N).
+- [x] Interactive visualisations using [leafmap](https://leafmap.org/) (ipyleaflet, folium backends)
+- [x] Powered by Python with direct access to [GeoPandas](https://geopandas.org/en/stable/) dataframes for your custom analyses.
+- [x] Standardized post-processed datasets for local and rapid processing, including
+    * [x] Combined [OSM + Microsoft building footprints](/building), including LiDAR height data
+    * [x] Historical property sale history for major cities (1M+ properties)
+    * [x] Points of interest combining OSM + Overture datasets
+    * [x] Instant [30m resolution Digital Elevation Models](/elevation) (+viewsheds)
+    * [x] [ACARA](https://www.acara.edu.au/) school performance metrics and overlays
+    * [x] Socioeconomic ([SEIFA](https://www.abs.gov.au/websitedbs/censushome.nsf/home/seifa)) indices for different regions
+    * [x] [Pandana](https://github.com/UDST/pandana)+[UrbanAccess](https://udst.github.io/urbanaccess/index.html) transportation network analytics
+    * [x] [OSMX](https://osmnx.readthedocs.io/en/stable/) walkability analytics
+    * [x] [Urbanity](https://github.com/winstonyym/urbanity) urban analytics
+- [ ] Coming datasets:
+    * [ ] Flooding data    
+    * [ ] Noise data    
+    * [ ] Heritage data
+    * [ ] Green space assortivity indices
+    * [ ] CENSUS data
+- [ ] Coming tools:
+    * [ ] Machine learning property price prediction model    
+    * [ ] Livible cities benchmarks e.g. [Higgs et al. 2023](https://www.nature.com/articles/s41597-023-02013-5)
+
+## Datasets
+
+wombat draws on a number of off-the-shelf datasets as well as post-processed datasets. Nearly all datasets of siginificant size are stored locally. In some cases, datsets are streamed from various online sources but only where the bandwidth requirements are modest (e.g. population tile data). The data sources can be broken down into broadly three categories, Government, Public, post-processed.
+
+| Dataset  | Goverment | Open | Brisbane | Sydney | Melbourne | Perth | Adelaide | Hobart | Canberra | Darwin |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| Addresses |  | [G-NAF](https://geoscape.com.au/data/g-naf/) | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| Elevation | [GeoScience Australia](https://www.ga.gov.au/scientific-topics/ national-location-information/topographic-maps-data/topographic-maps), [ELVIS](https://elevation.fsdf.org.au/) | [TessaDSM](https://tessadem.com), [FABDEM](https://research-information.bris.ac.uk/en/datasets/fabdem-v1-2) | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| Education | [ACARA](https://acara.edu.au/contact-us/acara-data-access) | | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| Population | [ABS](https://maps.abs.gov.au/) | [Meta HDX](https://dataforgood.facebook.com/dfg/docs/high-resolution-population-density-maps-demographic-estimates-documentation#how-to-access-data) | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| Buildings |  | [Overture](https://overturemaps.org/), [OSM Buildings](https://osmbuildings.org/), [Microsoft](https://github.com/microsoft/GlobalMLBuildingFootprints) | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| POIs | | [Overture](https://overturemaps.org/), [OSM POIs](https://openpoimap.org/) | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| Transport | |  [GTFS](https://gtfs.org/) | :white_check_mark: | :negative_squared_cross_mark: | :negative_squared_cross_mark: | :negative_squared_cross_mark: | :negative_squared_cross_mark: | :negative_squared_cross_mark: | :negative_squared_cross_mark: | :negative_squared_cross_mark: |
+| Noise | |  [GTFS](https://www.data.brisbane.qld.gov.au/data/dataset/city-plan-2014-transport-noise-corridor-overlay) | :white_check_mark: | :negative_squared_cross_mark: | :negative_squared_cross_mark: | :negative_squared_cross_mark: | :negative_squared_cross_mark: | :negative_squared_cross_mark: | :negative_squared_cross_mark: | :negative_squared_cross_mark: |
+
 ## 💻 Installation
 
-Install YourPackageName via pip:
+Install `wombat` via pip:
 
 ```bash
-pip install wombat
+pip install wombat-python (coming soon)
 ```
 
 Or clone the repository and install manually:
@@ -49,50 +92,12 @@ import wombat
 # initialise
 w = wombat()
 w.set_city("Brisbane")
-
-# get elevation information
-elevation = w.elevation_at_latlong(lat,long)
-print(elevation)
-
-# get school information
-schools = w.get_schools(top_seifa=True)
-print(schools)
+# more coming soon...
 ```
-
-For more examples and usage instructions, please refer to the Documentation (coming soon).
-
-## 📂 Datasets
-
-- [x] boundary data
-- [x] SEIFA/socioeconomic data
-- [x] elevation data
-- [x] zoning data
-- [x] flooding data
-- [x] parcel data
-- [x] school data
-- [x] census data
-- [x] transport data
-- [x] park data
-- [x] noise data
-- [x] heritage data
-- [x] disability data
-- [x] network data
-
-## 📐 Features
-
-- Feature 1: Coming soon.
-
-## Improvements:
-- [ ] Basic visualisations
-- [ ] Explore liveability metrics (e.g. community and health services, employment, food access, housing affordability, public open space, transportation frequency, walkability)
-
-## Contributing
-
-Contributions are welcome! Please see our [Contributing Guidelines](CONTRIBUTING.md) for more details.
 
 ## License
 
-wombat is distributed under the MIT License. See [LICENSE](LICENSE) for more information.
+wombat is distributed under the MIT License.
 
 ## Contact
 
@@ -100,6 +105,8 @@ Feel free to reach out with questions or suggestions:
 
 - GitHub Issues: [https://github.com/bgriffen/wombat/issues](https://github.com/bgriffen/wombat/issues)
 - Contact: [@brendangriffen](http://www.twitter.com/brendangriffen)
+
+
 
 
 [^1]: Higgs C, Alderton A, Rozek J, Adlakha D, Badland H, Boeing G, Both A, Cerin E, Chandrabose M, Gruyter CD, Gunn L, Livera AD, Hinckson E, Liu S, Mavoa S, Sallis J, Simons K, Giles-Corti B. Policy-Relevant Spatial Inidicators of Urban Liveability And Sustainability: Scaling From Local to Global. Urban Policy and Research. 2022 2022/12//;40(4). en. doi:10.1080/08111146.2022.2076215.
