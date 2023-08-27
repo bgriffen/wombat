@@ -46,10 +46,10 @@ nav:
 #        - Available Datasets: available-datasets.md
 #  - Concepts:
 #       - Statistical Areas: statisticalareas.md
-#    - Methods:
-#        - Buildings: buildings.md
-#        - Elevation: elevation.md
-    - Notebooks: 
+    - Methods:
+        - Buildings: buildings.md
+        - Elevation: elevation.md
+    - Getting Started: 
         - Boundaries: Boundaries.ipynb
         - Schools: Schools.ipynb
         - Buildings: Buildings.ipynb
@@ -71,7 +71,7 @@ plugins:
           execute: False
           include_requirejs: true
           allow_errors: false
-          ignore: ["conf.py",".ipynb/*", "data/README.md", "usage.md"]
+          ignore: ["conf.py",".ipynb_checkpoints/*", "data/README.md", "usage.md"]
           execute_ignore:
               [
                   "*.ipynb",
@@ -81,19 +81,22 @@ markdown_extensions:
     - admonition
     - abbr
     - attr_list
-    #- pymdownx.emoji:
-    #    emoji_index: !!python/name:materialx.emoji.twemoji
-    #    emoji_generator: !!python/name:materialx.emoji.to_svg
+    - pymdownx.emoji:
+        emoji_index: !!python/name:materialx.emoji.twemoji
+        emoji_generator: !!python/name:materialx.emoji.to_svg
+    #- fontawesome_markdown
     - def_list
+    - pymdownx.tasklist:
+        custom_checkbox: true
     - footnotes
     - meta
     - md_in_html
     - tables
     - pymdownx.superfences
     - pymdownx.highlight:
-          linenums: false
+        linenums: false
     - toc:
-          permalink: true
+        permalink: true
 
 extra:
   generator: false
