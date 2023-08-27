@@ -63,8 +63,8 @@ wombat draws on a number of off-the-shelf datasets as well as post-processed dat
 | Population | [ABS](https://maps.abs.gov.au/) | [Meta HDX](https://dataforgood.facebook.com/dfg/docs/high-resolution-population-density-maps-demographic-estimates-documentation#how-to-access-data) | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | Buildings |  | [Overture](https://overturemaps.org/), [OSM Buildings](https://osmbuildings.org/), [Microsoft](https://github.com/microsoft/GlobalMLBuildingFootprints) | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
 | POIs | | [Overture](https://overturemaps.org/), [OSM POIs](https://openpoimap.org/) | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark: |
-| Transport | |  [GTFS](https://gtfs.org/) | :white_check_mark: | :negative_squared_cross_mark: | :negative_squared_cross_mark: | :negative_squared_cross_mark: | :negative_squared_cross_mark: | :negative_squared_cross_mark: | :negative_squared_cross_mark: | :negative_squared_cross_mark: |
-| Noise | |  [GTFS](https://www.data.brisbane.qld.gov.au/data/dataset/city-plan-2014-transport-noise-corridor-overlay) | :white_check_mark: | :negative_squared_cross_mark: | :negative_squared_cross_mark: | :negative_squared_cross_mark: | :negative_squared_cross_mark: | :negative_squared_cross_mark: | :negative_squared_cross_mark: | :negative_squared_cross_mark: |
+| Transport | |  [GTFS](https://gtfs.org/) | :white_check_mark: | :alarm_clock: | :alarm_clock: | :alarm_clock: | :alarm_clock: | :alarm_clock: | :alarm_clock: | :alarm_clock: |
+| Noise | |  [GTFS](https://www.data.brisbane.qld.gov.au/data/dataset/city-plan-2014-transport-noise-corridor-overlay) | :white_check_mark: | :alarm_clock: | :alarm_clock: | :alarm_clock: | :alarm_clock: | :alarm_clock: | :alarm_clock: | :alarm_clock: |
 
 ## 💻 Installation
 
