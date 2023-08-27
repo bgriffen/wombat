@@ -6,10 +6,63 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.ticker as mticker
 from rasterio.transform import from_origin
-
+import os
 
 import rasterio
 from rasterio.transform import from_origin
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import plotly
+
+def compare_dems(data1,data2,extent1,extent2,title1="",title2=""):
+    """Compares two elevation datset and creates a plotly figure with two heatmaps.
+    
+    Args:
+        data1 (numpy.ndarray): The first dataset.
+        data2 (numpy.ndarray): The second dataset.
+        extent1 (tuple): The extent of the first dataset in the form (xmin, xmax, ymin, ymax).
+        extent2 (tuple): The extent of the second dataset in the form (xmin, xmax, ymin, ymax).
+        title1 (str, optional): The title for the first heatmap. Defaults to "".
+        title2 (str, optional): The title for the second heatmap. Defaults to "".
+    
+    Returns:
+        plotly.graph_objects.Figure: The subplot with the two heatmaps.
+    """
+    
+    # Find global min and max
+    global_zmin = min(data1.min(), data2.min())
+    global_zmax = max(data1.max(), data2.max())
+
+    # Define the subplot
+    fig = make_subplots(rows=1, cols=2,subplot_titles=(title1, title2))
+
+    # Create the heatmaps and add them to the subplot
+    heatmap1 = go.Heatmap(z=data1,     
+                        x=np.linspace(extent1[0],extent1[1], num=data1.shape[0]),
+                        y=np.linspace(extent1[2],extent1[3], num=data1.shape[1]),
+                        hovertemplate='Elevation: %{z}<extra></extra>m',
+                        colorscale='Viridis', 
+                        showscale=False,
+                        colorbar=dict(title='Elevation'),
+                        zmin=global_zmin, 
+                        zmax=global_zmax)
+
+    heatmap2 = go.Heatmap(z=data2,     
+                        x=np.linspace(extent2[0],extent2[1], num=data2.shape[0]),
+                        y=np.linspace(extent2[2],extent2[3], num=data2.shape[1]),
+                        hovertemplate='Elevation: %{z}<extra></extra>m',
+                        colorscale='Viridis', 
+                        showscale=True,
+                        colorbar=dict(title='Elevation'),
+                        zmin=global_zmin, 
+                        zmax=global_zmax)
+
+    fig.add_trace(heatmap1, row=1, col=1)
+    fig.add_trace(heatmap2, row=1, col=2)
+    fig.update_xaxes(title_text='Longitude', row=1, col=1, matches='x2')
+    fig.update_yaxes(title_text='Latitude', row=1, col=1, matches='y2')
+    fig.update_xaxes(title_text='Longitude', row=1, col=2)
+    return fig
 
 def save_raster_gdal(input_ds, filename, array):
     """
@@ -111,23 +164,33 @@ class Elevation(Datasets):
     def __init__(self,dataset_path,city=None):
         super().__init__(dataset_path,city)
         
-        self.ds = gdal.Open(self.elevation_tif_filename)
         if city is not None:
             self.City = City(city)
+    
+    def set_dataset(self,dataset='elvis'):
+        assert dataset in ['elvis','fabdem'],print("Please use either 'elvis' or 'fabdem'.")
+        if dataset == "elvis":
+            fread = self.elevation_tif_filename_elvis
+        elif dataset == "fabdem":
+            fread = self.elevation_tif_filename_FABDEM
         
-        #self.arr = self.ds.ReadAsArray()
-        self.raster_proj = self.ds.GetProjection()
-        self.gt = self.ds.GetGeoTransform()
-        self.gt_inv = gdal.InvGeoTransform(self.gt)
-        self.source_srs = osr.SpatialReference()
-        self.source_srs.ImportFromWkt(osr.GetUserInputAsWKT(self.raster_proj)) #"urn:ogc:def:crs:OGC:1.3:CRS84"))
+        self.dataset = dataset
+        if os.path.exists(fread):
+            print(fread)
+            self.ds = gdal.Open(fread)
+            #self.arr = self.ds.ReadAsArray()
+            self.raster_proj = self.ds.GetProjection()
+            self.gt = self.ds.GetGeoTransform()
+            self.gt_inv = gdal.InvGeoTransform(self.gt)
+            self.source_srs = osr.SpatialReference()
+            self.source_srs.ImportFromWkt(osr.GetUserInputAsWKT(self.raster_proj)) #"urn:ogc:def:crs:OGC:1.3:CRS84"))
 
-        # define target projection based on the file
-        target_srs = osr.SpatialReference()
-        target_srs.ImportFromWkt(self.raster_proj)
+            # define target projection based on the file
+            target_srs = osr.SpatialReference()
+            target_srs.ImportFromWkt(self.raster_proj)
 
-        # convert 
-        self.ct = osr.CoordinateTransformation(self.source_srs, target_srs)
+            # convert 
+            self.ct = osr.CoordinateTransformation(self.source_srs, target_srs)
 
     def get_elevation(self,lons,lats): 
         self.lons = lons
@@ -167,10 +230,10 @@ class Elevation(Datasets):
                                                   self.x_end-self.x_start, 
                                                   self.y_end-self.y_start)
 
+    #def plot_section_plotly(self):
     def plot_elevation(self,include_points=False,gdf=None):
         # Create a figure and axis to plot on
         fig, ax = plt.subplots(constrained_layout=True)
-
         
          # The extent parameter takes bounding box in the form of (left, right, bottom, top)
         lon_min = self.gt[0] + (self.x_start * self.gt[1])
@@ -218,3 +281,17 @@ class Elevation(Datasets):
         #               y_res_degree,self.ds.crs,filename)
         
         save_raster_gdal(self.ds, filename, self.elevation_data)
+        
+
+
+#import wombat
+#w = wombat.Wombat()
+#lat,lon = wombat.datasets.caplatlon['Adelaide']
+#w.Elevation.get_elevation([lon],[lat])
+#w.Elevation.make_section(lon, lat, box_width_km=100)
+#w.Elevation.plot_elevation(include_points=True)
+#w.Boundary.load_states_territories()
+#gdf = w.Boundary.gdf_states_territories
+#w.Elevation.plot_elevation(include_points=True) #,gdf=gdf
+#w.Elevation.save_section()
+
