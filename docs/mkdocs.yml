@@ -39,7 +39,8 @@ theme:
 
 nav:
     - Home: index.md
-    - Getting Started: 
+    - Getting Started:
+        - Concepts: concepts.md
         - Boundaries: Boundaries.ipynb
         - Schools: Schools.ipynb
         - Buildings: Buildings.ipynb
