@@ -39,20 +39,13 @@ theme:
 
 nav:
     - Home: index.md
-#    - Home2: ../../README.md
-#    - Basics:
-#        - Installation: installation.md
-#        - Getting Started: getting-started.md
-#        - Available Datasets: available-datasets.md
-#  - Concepts:
-#       - Statistical Areas: statisticalareas.md
     - Getting Started: 
         - Boundaries: Boundaries.ipynb
         - Schools: Schools.ipynb
         - Buildings: Buildings.ipynb
-    - Methods:
-        - Buildings: buildings.md
-        - Elevation: elevation.md
+    #- Methods:
+    #    - Buildings: buildings.md
+    #    - Elevation: elevation.md
 
 features:
   - navigation.instant
