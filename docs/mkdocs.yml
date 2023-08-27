@@ -46,13 +46,13 @@ nav:
 #        - Available Datasets: available-datasets.md
 #  - Concepts:
 #       - Statistical Areas: statisticalareas.md
-    - Methods:
-        - Buildings: buildings.md
-        - Elevation: elevation.md
     - Getting Started: 
         - Boundaries: Boundaries.ipynb
         - Schools: Schools.ipynb
         - Buildings: Buildings.ipynb
+    - Methods:
+        - Buildings: buildings.md
+        - Elevation: elevation.md
 
 features:
   - navigation.instant
