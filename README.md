@@ -90,14 +90,14 @@ Here's a quick example to get you started:
 import wombat
 
 # initialise
-w = wombat()
+w = wombat.Wombat(dataset_path=os.environ['WOMBAT_DATASET_PATH'])
 w.set_city("Brisbane")
 # more coming soon...
 ```
 
 ## License
 
-wombat is distributed under the MIT License.
+wombat is distributed under the [MIT License](https://github.com/bgriffen/wombat/blob/main/LICENSE).
 
 ## Contact
 
