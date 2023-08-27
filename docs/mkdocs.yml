@@ -37,6 +37,10 @@ theme:
         text: Google Sans
         code: Regular
 
+exclude_docs: |
+    exclude/
+    notebooks/
+
 nav:
     - Home: index.md
     - Getting Started:
@@ -65,7 +69,7 @@ plugins:
           execute: False
           include_requirejs: true
           allow_errors: false
-          ignore: ["conf.py",".ipynb_checkpoints/*", "data/README.md", "usage.md"]
+          ignore: ["*.py","conf.py",".ipynb_checkpoints/*", "data/README.md", "usage.md","exclude/*","notebooks/*/*.ipynb"]
           execute_ignore:
               [
                   "*.ipynb",
