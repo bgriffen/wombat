@@ -19,7 +19,8 @@ Many geospatial projects are leviathans in their deployment with high interdepen
 
 !!! warning
 
-    The developer has no prior geospatial experience and so your mileage may vary. This project is a "learn by doing" exercise and very much a *work in progress*.
+    The developer has no prior geospatial experience and so your mileage may vary. smile:
+    This project is a "learn by doing" exercise and very much a *work in progress*.
 
 Lastly, this builds of the shoulders of many other works[^1][^2][^3][^4][^5] - thank you.
 
