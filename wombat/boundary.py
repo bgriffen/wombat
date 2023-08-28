@@ -31,38 +31,59 @@ def polygons_within_radius(gdf,lat,lon,radius):
     # Use spatial join to find polygons that intersect with buffered center point
     polygons_in_radius = sjoin(gdf, center_point, op='intersects')
     return polygons_in_radius 
+
+def load_statistical_area(filename,layer,column_name=None,filter_value=None):
+    gdf = gpd.read_file(filename,layer=layer)
+    if column_name is not None:
+        assert column_name in gdf.columns, print("Only these columns are available:",list(gdf.columns))
+        return gdf[gdf[column_name] == filter_value]
+    return gdf
+
 class StatisticalArea:
     def __init__(self,filename,layer):
         self.filename = filename
         self.layer = layer
-    
-    def load(self):
-        self.gdf = gpd.read_file(self.filename,layer=self.layer)
-        self.columns = sorted(list(self.gdf.columns))
-        
+        # https://www.abs.gov.au/statistics/standards/australian-statistical-geography-standard-asgs-edition-3/jul2021-jun2026/access-and-downloads/digital-boundary-files
         
 class Boundary(Datasets):
     def __init__(self,dataset_path):
         super().__init__(dataset_path)
         self.dataset_path = dataset_path
-        self.dataset = "SA3_2021_AUST_GDA2020"
         
-        boundary_files = glob.glob(os.path.join(dataset_path,"*.gpkg"))
-
-        self.Areas = []
-        for filei in boundary_files:
+        files = glob.glob(os.path.join(self.boundary_path,"*.gpkg"))
+        self.Areas = {}
+        for filei in files:
             layers = fiona.listlayers(filei)
             for l in layers:
-                self.Areas[l] = StatisticalArea(filename=filei,layer=l)
+                self.Areas[l.split("_")[0]] = {'filename':filei,'layer':l}
 
         #self.folder = os.path.join(dataset_path,"boundary")
         #self.filename_country = os.path.join(self.folder,"%s.geojson"%self.dataset)
         #boundary_files = glob.glob(os.path.join(self.folder,"*AUST*.geojson"))
         #self.available_boundaries = sorted(list(set([os.path.basename(f) for f in boundary_files])))
-    def set_area(layer_name,column_name=None,filter_value=None):
-        self.Areas[layer_name].load()
-        if column_name is None:
-            self.gdf = self.gdf[self.gdf[column_name] == filter_value]
+        
+    def set_area(self,statistical_area,column_name=None,filter_value=None):
+        """_summary_
+        Args:
+            statistical_area (str): Statistical Area name
+            column_name (str, optional): Column of the statistical area (e.g. "SA_NAME21"). Defaults to None.
+            filter_value (str, optional): Value to filter over (e.g. "Greater Brisbane"). Defaults to None.
+        """ 
+        filename = self.Areas[statistical_area]['filename']
+        layer = self.Areas[statistical_area]['layer']
+        self.gdf = load_statistical_area(filename,
+                                         layer,
+                                         column_name=column_name,
+                                         filter_value=filter_value)
+        self.gdf = self.gdf[~self.gdf['geometry'].isna()]
+        if "SA4_NAME_2021" in self.gdf.columns:
+            self.sa4s = sorted(list(set(self.gdf['SA4_NAME_2021'])))
+        if "SA3_NAME_2021" in self.gdf.columns:
+            self.sa3s = sorted(list(set(self.gdf['SA3_NAME_2021'])))
+        if "STATE_NAME_2021" in self.gdf.columns:
+            self.state = sorted(list(set(self.gdf['STATE_NAME_2021'])))
+        if "GCCSA_NAME_2021" in self.gdf.columns:
+            self.gccsa = sorted(list(set(self.gdf['GCCSA_NAME_2021'])))
         
  #       if city is not None:
  #           self.City = City(city)
@@ -78,11 +99,9 @@ class Boundary(Datasets):
  #               self.gdf.to_file(self.filename_city,engine='pyogrio')
  #           else:
  #               self.gdf = gpd.read_file(self.filename_city,engine='pyogrio')
-        
             #if radius is not None:
             #    self.set_radius(radius)
-
-            self.names = sorted(list(set(self.gdf['SA3_NAME21'])))
+            #self.names = sorted(list(set(self.gdf['SA3_NAME21'])))
     
     def load_states_territories(self):
         self.gdf_states_territories = gpd.read_file(self.boundary_path_states_territories,engine='pyogrio')
