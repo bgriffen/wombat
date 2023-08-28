@@ -13,6 +13,7 @@ class Urbanity(Datasets):
         self.City = City(city)
         self.urb = urb.Map(country="Australia")
         self.urb.center = (self.City.lat,self.City.lon) #helper.caplatlon[city]
+        self.urb.directory = self.pbf_path
         self.tmp_file = 'tmp_region.geojson'
         print(self.pbf_path)
         
@@ -20,16 +21,19 @@ class Urbanity(Datasets):
         gdf.to_file(self.tmp_file, driver='GeoJSON')
         #self.map.add_polygon_boundary(self.tmp_file)
     
-    def run(self,graph_attr=True,building_attr=True,pop_attr=True,svi_attr=True,poi_attr=True,bandwith=200):
+    def run(self,building_footprints=None,graph_attr=True,building_attr=True,pop_attr=True,svi_attr=True,poi_attr=True,bandwith=200):
+        
         self.graph, self.nodes, self.edges = self.urb.get_street_network(filepath=self.pbf_filename,
-                                                                        location=self.City.name,
-                                                                        graph_attr=True,
-                                                                        building_attr=True, 
-                                                                        pop_attr=True, 
-                                                                        svi_attr=True,
-                                                                        poi_attr=True,
-                                                                        bandwidth=200)
-    
+                                                                        location="Australia",
+                                                                        graph_attr=graph_attr,
+                                                                        building_attr=building_attr, 
+                                                                        pop_attr=pop_attr, 
+                                                                        svi_attr=svi_attr,
+                                                                        poi_attr=poi_attr,
+                                                                        bandwidth=bandwith,
+                                                                        building_footprints=building_footprints)
+        self.aggregate()
+        
     def save(self):
         with open(os.path.join(self.City.name+".pickle"), 'wb') as file:
             pickle.dump(self.graph, file)
@@ -37,8 +41,8 @@ class Urbanity(Datasets):
         self.edges.to_file(os.path.join(self.dataset_path,"urbanity",self.City.name+"_edges.geojson"), driver='GeoJSON')
         self.stats.to_csv(os.path.join(self.dataset_path,"urbanity",self.City.name+"_stats.csv"))
         
-    def aggregate(self,save=True):
-        self.stats = self.urb.get_aggregate_stats(location=self.city,filepath=self.pbf_path,column="SA3_NAME21")
+    def aggregate(self):
+        self.stats = self.urb.get_aggregate_stats(location="Australia",filepath=self.pbf_path,column="SA3_NAME21")
     
         # Method to run analysis across all listed cities
     def run_all_cities(self,gdf,radius=None):
