@@ -5,6 +5,7 @@ import wombat.helper as helper
 import os
 from wombat.datasets import Datasets,City
 import glob
+import fiona
 
 def polygons_within_radius(gdf,lat,lon,radius):
     """Find polygons within a given radius of a center point.
@@ -30,32 +31,53 @@ def polygons_within_radius(gdf,lat,lon,radius):
     # Use spatial join to find polygons that intersect with buffered center point
     polygons_in_radius = sjoin(gdf, center_point, op='intersects')
     return polygons_in_radius 
-
+class StatisticalArea:
+    def __init__(self,filename,layer):
+        self.filename = filename
+        self.layer = layer
+    
+    def load(self):
+        self.gdf = gpd.read_file(self.filename,layer=self.layer)
+        self.columns = sorted(list(self.gdf.columns))
+        
+        
 class Boundary(Datasets):
-    def __init__(self,dataset_path,city=None):
-        super().__init__(dataset_path,city)
+    def __init__(self,dataset_path):
+        super().__init__(dataset_path)
         self.dataset_path = dataset_path
         self.dataset = "SA3_2021_AUST_GDA2020"
         
-        self.folder = os.path.join(dataset_path,"boundary")
-        self.filename_country = os.path.join(self.folder,"%s.geojson"%self.dataset)
-        boundary_files = glob.glob(os.path.join(self.folder,"*AUST*.geojson"))
-        self.available_boundaries = sorted(list(set([os.path.basename(f) for f in boundary_files])))
+        boundary_files = glob.glob(os.path.join(dataset_path,"*.gpkg"))
+
+        self.Areas = []
+        for filei in boundary_files:
+            layers = fiona.listlayers(filei)
+            for l in layers:
+                self.Areas[l] = StatisticalArea(filename=filei,layer=l)
+
+        #self.folder = os.path.join(dataset_path,"boundary")
+        #self.filename_country = os.path.join(self.folder,"%s.geojson"%self.dataset)
+        #boundary_files = glob.glob(os.path.join(self.folder,"*AUST*.geojson"))
+        #self.available_boundaries = sorted(list(set([os.path.basename(f) for f in boundary_files])))
+    def set_area(layer_name,column_name=None,filter_value=None):
+        self.Areas[layer_name].load()
+        if column_name is None:
+            self.gdf = self.gdf[self.gdf[column_name] == filter_value]
         
-        if city is not None:
-            self.City = City(city)
-            self.filename_city = os.path.join(self.folder,self.dataset+"_"+f"{self.City.name}_boundary.geojson")
-            print("Setting:",self.City.name)
-            if not os.path.exists(self.filename_city):
-                self.gdf_full = gpd.read_file(self.filename,engine='pyogrio')
-                if self.City.name == "Canberra":  # Hacky handling to sort out beloved ACT/Canberra
-                    mask_city = self.gdf_full['GCC_NAME21'].str.contains("Australian Capital Territory")
-                else:
-                    mask_city = self.gdf_full['GCC_NAME21'].str.contains(self.City.name)
-                self.gdf = self.gdf_full[mask_city]
-                self.gdf.to_file(self.filename_city,engine='pyogrio')
-            else:
-                self.gdf = gpd.read_file(self.filename_city,engine='pyogrio')
+ #       if city is not None:
+ #           self.City = City(city)
+ #           self.filename_city = os.path.join(self.folder,self.dataset+"_"+f"{self.City.name}_boundary.geojson")
+ #           print("Setting:",self.City.name)
+ #           if not os.path.exists(self.filename_city):
+ #               self.gdf_full = gpd.read_file(self.filename,engine='pyogrio')
+ #               if self.City.name == "Canberra":  # Hacky handling to sort out beloved ACT/Canberra
+ #                   mask_city = self.gdf_full['GCC_NAME21'].str.contains("Australian Capital Territory")
+ #               else:
+ #                   mask_city = self.gdf_full['GCC_NAME21'].str.contains(self.City.name)
+ #               self.gdf = self.gdf_full[mask_city]
+ #               self.gdf.to_file(self.filename_city,engine='pyogrio')
+ #           else:
+ #               self.gdf = gpd.read_file(self.filename_city,engine='pyogrio')
         
             #if radius is not None:
             #    self.set_radius(radius)
