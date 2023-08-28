@@ -1,5 +1,6 @@
 import os
 import pyrosm
+os.environ['USE_PYGEOS'] = '0'
 import geopandas as gpd
 import pandas as pd
 import shapely
@@ -18,11 +19,11 @@ def get_or_make_osm_footprints(city,pbf_path,fout):
             return
         osm = pyrosm.OSM(osm_data)
         osm_buildings = osm.get_buildings()
-        osm_buildings.to_file(fout)
+        osm_buildings.to_file(fout,engine='pyogrio')
     else:
         print("Loading OSM building data from file...")
         print(fout)
-        osm_buildings = gpd.read_file(fout)
+        osm_buildings = gpd.read_file(fout,engine='pyogrio')
     return osm_buildings
 
 def combine_rows(df, quad_keys, aoi_shape):
@@ -109,28 +110,35 @@ def make_footprints(city, dataset_path,gdf=None,radius=None):
     gdf.crs = "EPSG:4326"
 
     # Write out the GeoJSON
-    gdf.to_file(fout, driver='GeoJSON')
+    gdf.to_file(fout, driver='GeoJSON',engine='pyogrio')
 
+#def fix_invalid_geoms(gdf):
+#    gdf["geometry"] = gdf.buffer(0)
+#    return gdf
 
 def calc_intersection_between_msft_and_osm(buildings_msft_gdf,osm_buildings,fout=None):
-    print("Calculating overlaps...")
+    #if os.path.exists(fout) and not recalc:
+    #    print("Reading overlaps...",fout)
+    #    return gpd.read_file(fout,engine='pyogrio')
+    
+    print("> [ BUILDINGS ] Calculating overlaps...")
     buildings_msft_gdf['is_osm'] = False
     osm_buildings['is_osm'] = True
     overlaps = sjoin(buildings_msft_gdf, osm_buildings, how='inner', op='intersects')
-    print("Calculating non-overlaps...")
-    non_overlapping = buildings_msft_gdf.loc[~buildings_msft_gdf.index.isin(overlaps.index)]
-    print(non_overlapping.shape)
+    print("> [ BUILDINGS ] Calculating non-overlaps...")
+    print("> [ BUILDINGS ] Percent Objects Overlap: %3.2f" % (osm_buildings.shape[0]/len(overlaps)))
+    msft_not_in_osm = buildings_msft_gdf.loc[~buildings_msft_gdf.index.isin(overlaps.index)][['id','is_osm','geometry']]
     #print(non_overlapping.columns)
-    unique_buildings = pd.concat([osm_buildings, non_overlapping])
-    print("Saving...")
+    unique_buildings = pd.concat([osm_buildings, msft_not_in_osm])
     #print(unique_buildings.isna().sum())
     #print(unique_buildings.dtypes)
-    print(unique_buildings.shape)
     #fout = os.path.join(dataset_path,f"{city}_{kind}_combined_footprints.geojson")
-    print(fout)
+    #unique_buildings = unique_buildings.apply(fix_invalid_geoms, axis=1)
+    #unique_buildings_reduced.to_file('output.geojson', driver='GeoJSON')
     unique_buildings_reduced = unique_buildings[['id','is_osm','geometry']]
-    if fout is not None:
-        unique_buildings_reduced.to_file(fout)
-    return unique_buildings_reduced
+    if fout is not None and not os.path.exists(fout):
+        print("> [ BUILDINGS ] Saving...")
+        unique_buildings_reduced.to_file(fout, driver='GeoJSON',engine='pyogrio')
+    return unique_buildings_reduced, msft_not_in_osm
 
 
