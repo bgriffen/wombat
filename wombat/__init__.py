@@ -15,6 +15,9 @@ from wombat.datasets import caplatlon as caplatlon
 from wombat.datasets import addresses as addresses
 from wombat.datasets import capitals as capitals
 import os
+from wombat.datasets import City as City
+import wombat.elevation as elevation
+from wombat.boundary import Australia_BoundingBox as Australia_BoundingBox
 
 def _in_colab_shell():
     """Tests if the code is being executed within Google Colab."""
