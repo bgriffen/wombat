@@ -41,6 +41,7 @@ get_gccs_name = {"Canberra":"Australian Capital Territory",
                 "Sydney":"Greater Sydney",
                 "Perth":"Greater Perth"}
 
+
 class Wombat(leafmap.Map):
     def __init__(self,dataset_path,**kwargs):
         super().__init__(**kwargs)
@@ -69,11 +70,19 @@ class Wombat(leafmap.Map):
                                column_name="AUS_NAME_2021",
                                filter_value="Australia")
         
-    def set_area_as_state(self,state):
-        self.Boundary.set_area(statistical_area="STE",
-                               column_name="GCC",
+    def set_area_as_state(self,state=None):
+        if state is not None:
+            self.Boundary.set_area(statistical_area="STE",
+                               column_name="STATE_NAME_2021",
                                filter_value=state)
-        
+        else:
+            self.Boundary.set_area(statistical_area="STE")
+    
+    def set_area_as_sa3_for_state(self,state):
+        self.Boundary.set_area(statistical_area="SA3",
+                               column_name='STATE_NAME_2021', 
+                               filter_value=state)
+                
     # Method to set the city for analysis and initialize Urbanity object instance
     def set_area_as_city(self,city):
         assert city in get_gccs_name.keys(),print("That city won't work, try a capital.")
