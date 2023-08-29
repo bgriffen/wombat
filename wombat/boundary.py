@@ -1,6 +1,6 @@
 import geopandas as gpd
 from geopandas.tools import sjoin
-from shapely.geometry import Point
+from shapely.geometry import Point,Polygon
 import wombat.helper as helper
 import os
 from wombat.datasets import Datasets,City
@@ -36,8 +36,26 @@ def load_statistical_area(filename,layer,column_name=None,filter_value=None):
     gdf = gpd.read_file(filename,layer=layer)
     if column_name is not None:
         assert column_name in gdf.columns, print("Only these columns are available:",list(gdf.columns))
-        return gdf[gdf[column_name] == filter_value]
+        subset_vals = gdf[column_name]
+        unique_vals = sorted(list(set(subset_vals)))
+        assert filter_value in unique_vals, print("Only these columns are available:",unique_vals)
+        return gdf[subset_vals == filter_value]
     return gdf
+
+Australia_BoundingBox = {
+    'minx': 112.9519424,
+    'miny': -43.7405093,
+    'maxx': 153.9933464,
+    'maxy': -9.1870234
+}
+
+Australia_BoundingBox_geom = Polygon([(Australia_BoundingBox['minx'],Australia_BoundingBox['miny']), 
+                                      (Australia_BoundingBox['minx'],Australia_BoundingBox['maxy']), 
+                                      (Australia_BoundingBox['maxx'],Australia_BoundingBox['maxy']),
+                                      (Australia_BoundingBox['maxx'],Australia_BoundingBox['miny'])])
+
+g = gpd.GeoSeries([Australia_BoundingBox_geom],crs="EPSG:4326")
+# Convert GeoSeries to GeoDataFrame
 
 class StatisticalArea:
     def __init__(self,filename,layer):
@@ -57,6 +75,7 @@ class Boundary(Datasets):
             for l in layers:
                 self.Areas[l.split("_")[0]] = {'filename':filei,'layer':l}
 
+        self.Australia_BoundingBox_Poly = gpd.GeoDataFrame(geometry=g)
         #self.folder = os.path.join(dataset_path,"boundary")
         #self.filename_country = os.path.join(self.folder,"%s.geojson"%self.dataset)
         #boundary_files = glob.glob(os.path.join(self.folder,"*AUST*.geojson"))
@@ -84,25 +103,7 @@ class Boundary(Datasets):
             self.state = sorted(list(set(self.gdf['STATE_NAME_2021'])))
         if "GCCSA_NAME_2021" in self.gdf.columns:
             self.gccsa = sorted(list(set(self.gdf['GCCSA_NAME_2021'])))
-        
- #       if city is not None:
- #           self.City = City(city)
- #           self.filename_city = os.path.join(self.folder,self.dataset+"_"+f"{self.City.name}_boundary.geojson")
- #           print("Setting:",self.City.name)
- #           if not os.path.exists(self.filename_city):
- #               self.gdf_full = gpd.read_file(self.filename,engine='pyogrio')
- #               if self.City.name == "Canberra":  # Hacky handling to sort out beloved ACT/Canberra
- #                   mask_city = self.gdf_full['GCC_NAME21'].str.contains("Australian Capital Territory")
- #               else:
- #                   mask_city = self.gdf_full['GCC_NAME21'].str.contains(self.City.name)
- #               self.gdf = self.gdf_full[mask_city]
- #               self.gdf.to_file(self.filename_city,engine='pyogrio')
- #           else:
- #               self.gdf = gpd.read_file(self.filename_city,engine='pyogrio')
-            #if radius is not None:
-            #    self.set_radius(radius)
-            #self.names = sorted(list(set(self.gdf['SA3_NAME21'])))
-    
+
     def load_states_territories(self):
         self.gdf_states_territories = gpd.read_file(self.boundary_path_states_territories,engine='pyogrio')
         
