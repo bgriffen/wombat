@@ -64,20 +64,21 @@ class Buildings(Datasets):
     def load(self,load_osm=False,load_msft=False,load_combined=True):
         
         if os.path.exists(self.msft_footprints_filename) and load_msft:
-            print("...Microsoft")
+            print("> [ BUILDINGS ] Loading Microsoft...")
             self.buildings_msft = gpd.read_file(self.msft_footprints_filename,drive="GeoJSON",engine='pyogrio')
             self.buildings_msft['is_osm'] = False
             
         if os.path.exists(self.osm_footprint_filename) and load_osm:
-            print("...OSM")
+            print("> [ BUILDINGS ] Loading OSM...")
             self.buildings_osm = gpd.read_file(self.osm_footprint_filename,drive="GeoJSON",engine='pyogrio')
             self.buildings_osm['is_osm'] = True
             
         if os.path.exists(self.combined_footprints_filename) and load_combined:
+            print("> [ BUILDINGS ] Loading combined footprints...")
             self.buildings = gpd.read_file(self.combined_footprints_filename,drive="GeoJSON",engine='pyogrio')
 
     def calc_overlaps(self):
-        self.buildings = tools_buildings.calc_intersection_between_msft_and_osm(self.buildings_msft,
+        self.buildings,self.buildings_msft_not_in_osm = tools_buildings.calc_intersection_between_msft_and_osm(self.buildings_msft,
                                                                                 self.buildings_osm,
                                                                                 fout=self.combined_footprints_filename)
         
@@ -88,11 +89,11 @@ class Buildings(Datasets):
         self.which = which
 
         if which == "all":
-            gdf = self.buildings
+            gdf = self.buildings.copy()
         if which == "msft":
-            gdf = self.buildings_msft
+            gdf = self.buildings_msft.copy()
         if which == "osm":
-            gdf = self.buildings_osm
+            gdf = self.buildings_osm.copy()
 
         self.buildings_gdf_filter = filter_gdf_center_width(gdf,width=bbox_width,center=center_latlon)
     
@@ -110,8 +111,8 @@ class Buildings(Datasets):
         #{'style': {'color': 'black', 'fillColor': '#3366cc', 'opacity':0.05, 'weight':1.9, 'dashArray':'2', 'fillOpacity':0.6},
         #                                 'hover_style': {'fillColor': 'orange' , 'fillOpacity': 0.2}}
 
-        map.add_gdf(rgdf,layer_name='Bounding Box', style={'color': 'black','fillOpacity':0},hover_style={'color': 'red','fillOpacity':0})
-
+        map.add_gdf(rgdf, layer_name='Bounding Box',style={'color': 'black','fillOpacity':0})# ,info_mode=None)
+        #map.add_geojson(rgdf)
         #self.map.center = (south_west[0]+north_east[0])/2, (south_west[1]+north_east[1])/2
         #self.map.zoom=15
 
@@ -150,7 +151,6 @@ class Buildings(Datasets):
             if (mask_msft).any():
                 map.add_gdf(self.buildings_gdf_filter[mask_msft],layer_name='MSFT Buildings', style={'color': 'blue','fillOpacity':0,'weight':1.3},hover_style={'color': 'blue','fillOpacity':0.3,'weight':2.8})
         else:
-            print(self.buildings_gdf_filter.shape)
             map.add_gdf(self.buildings_gdf_filter,layer_name='%s buildings'%which,show=False)
         return map
     
