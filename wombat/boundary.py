@@ -76,11 +76,7 @@ class Boundary(Datasets):
                 self.Areas[l.split("_")[0]] = {'filename':filei,'layer':l}
 
         self.Australia_BoundingBox_Poly = gpd.GeoDataFrame(geometry=g)
-        #self.folder = os.path.join(dataset_path,"boundary")
-        #self.filename_country = os.path.join(self.folder,"%s.geojson"%self.dataset)
-        #boundary_files = glob.glob(os.path.join(self.folder,"*AUST*.geojson"))
-        #self.available_boundaries = sorted(list(set([os.path.basename(f) for f in boundary_files])))
-        
+
     def set_area(self,statistical_area,column_name=None,filter_value=None):
         """_summary_
         Args:
