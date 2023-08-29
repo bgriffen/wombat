@@ -55,7 +55,6 @@ Australia_BoundingBox_geom = Polygon([(Australia_BoundingBox['minx'],Australia_B
                                       (Australia_BoundingBox['maxx'],Australia_BoundingBox['miny'])])
 
 g = gpd.GeoSeries([Australia_BoundingBox_geom],crs="EPSG:4326")
-# Convert GeoSeries to GeoDataFrame
 
 class StatisticalArea:
     def __init__(self,filename,layer):
