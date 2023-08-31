@@ -62,7 +62,7 @@ Non ABS Structures
 * Destination Zones are co-designed with state and territory transport authorities for the analysis of Place of Work Census of Population and Housing data, commuting patterns and the development of transport policy.
 
 <figure markdown>
-  ![Australian Statistical Geographic Areas](/img/ASGS_Diagram_2021.png)
+  ![Australian Statistical Geographic Areas](img/ASGS_Diagram_2021.png)
   <figcaption>Various ABS and Non ABS Structures, their component regions and how they interrelate. Australian Statistical Geography Standard <br> Source:
 <a href="https://www.abs.gov.au/statistics/standards/australian-statistical-geography-standard-asgs-edition-3/latest-release#overview">ASGS</a></figcaption>
 </figure>
