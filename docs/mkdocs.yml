@@ -66,11 +66,12 @@ plugins:
           type: timeago
     # - pdf-export
     - mkdocs-jupyter:
-          include_source: True
-          ignore_h1_titles: True
+          include_source: true
+          ignore_h1_titles: true
           execute: False
           include_requirejs: true
           allow_errors: false
+          remove_cell_tags: true
           ignore: ["*.py","conf.py",".ipynb_checkpoints/*", "data/README.md", "usage.md","exclude/*","notebooks/*/*.ipynb"]
           execute_ignore:
               [
