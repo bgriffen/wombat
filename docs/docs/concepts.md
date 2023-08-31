@@ -196,4 +196,4 @@ GCCSA GREATER SYDNEY
 
     There is no GCC name for "Canberra" and is simply captured within the GCC defined as "Australian Capital Territory"
 
-Please checkout the next section on [Boundaries](/statisticalareas)
+Please checkout the next section on [Boundaries](/boundaries)
