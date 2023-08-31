@@ -6,7 +6,244 @@ import os
 from wombat.datasets import Datasets,City
 import glob
 import fiona
+import networkx as nx
 
+def print_tree(G, root_node, max_depth=2, depth=0,exclude_level=None):
+    top_node = G.nodes[root_node]
+    treestr = u"%s %s" % (top_node['level'], top_node['label'])
+    print(treestr.upper())
+    print_tree_recur(G, root_node, max_depth=max_depth, depth=depth,exclude_level=None)
+    
+def print_tree_recur(G, root_node, max_depth=2, depth=0,exclude_level=None):
+    """Prints a tree recursively starting from a root node.
+    
+    Args:
+        G (networkx.Graph): The graph representing the tree.
+        root_node: The root node of the tree.
+        max_depth (int, optional): The maximum depth to traverse the tree. Defaults to 2.
+        depth (int, optional): The current depth of the recursion. Defaults to 0.
+        exclude_level (optional): The level to exclude from printing. Defaults to None.
+    
+    Returns:
+        None
+    
+    Example:
+        >>> G = networkx.Graph()
+        >>> G.add_node(1, level=0, label='A', area_sqkm=100)
+        >>> G.add_node(2, level=1, label='B', area_sqkm=50)
+        >>> G.add_edge(1, 2)
+        >>> print_tree_recur(G, 1)
+        > A (100km2)
+        >> B (50km2)
+    """
+    
+    if depth <= max_depth:
+        # get edges from root node
+        edges = [(root_node, child) for child in G.neighbors(root_node)]
+        for (parent, child) in edges:
+            node = G.nodes[child]
+            if np.isfinite(node['area_sqkm']):
+                area = node['area_sqkm']
+            else:
+                area = 0
+            
+            if exclude_level is not None and node['level'] == exclude_level:
+                continue
+            
+            treestr = u"> %s %s %s (%ikm2)" % (">>"*depth, node['level'], node['label'], area)
+            print(treestr.ljust(8))
+            
+            # recursive call to print its children
+            print_tree_recur(G, child, max_depth, depth+1)
+
+def get_node_by_label(G, target_label):
+    """Returns the first node in the graph `G` that has a label matching `target_label`.
+    
+    Args:
+        G (networkx.Graph): The graph to search for nodes.
+        target_label (str): The label to search for.
+    
+    Returns:
+        node: The first node found with a matching label, or None if no such node is found.
+    """
+    
+    for node in G.nodes(data=True):
+        if 'label' in node[1]:  # node[1] is where data is stored in a Node Tuple
+            if node[1]['label'] == target_label:
+                return node
+    return None
+
+def get_nodes_by_level(G, level):
+    """Get nodes by level.
+    
+    Args:
+        G (networkx.Graph): The graph to search for nodes.
+        level (int): The level of nodes to retrieve.
+    
+    Returns:
+        list: A list of nodes that belong to the specified level.
+    """
+    
+    matched_nodes = []
+    for node in G.nodes:
+        if G.nodes[node]['level'] == level:
+            matched_nodes.append(node)
+    return matched_nodes
+
+def get_subnetwork(G, node, depth):
+    """Get the subnetwork of a given node in a graph up to a certain depth.
+    
+    Args:
+        G (networkx.Graph): The input graph.
+        node: The node from which to start the subnetwork.
+        depth (int): The maximum depth of the subnetwork.
+    
+    Returns:
+        networkx.Graph: The subnetwork of the given node up to the specified depth.
+    """
+    
+    sub_G = nx.ego_graph(G, node, radius=depth)
+    return sub_G
+
+class GeoHierarchy:
+    
+    def __init__(self, boundary_path,fname_save = "2023_AUS_Boundaries"):
+        self.boundary_path = boundary_path
+        self.fname_save = fname_save
+        self.fileout = os.path.join(boundary_path,"%s.gpickle"%fname_save)
+        
+        self.G = nx.DiGraph()
+        self.G.add_node("root", label='root', level="AUS")
+        self.gpkg_files = ['ASGS_2021_Main_Structure_GDA2020',
+                            'ASGS_Ed3_Non_ABS_Structures_GDA2020_updated_2023',
+                            'ASGS_2021_SUA_UCL_SOS_SOSR_GPKG_GDA2020',
+                            'ASGS_Ed3_2021_Indigenous_Structure_GDA2020']
+        
+    def construct_full_hierarchy(self):
+        for fname in self.gpkg_files:
+            self.index = None
+            if "Main" in fname:
+                self.index = [
+                    {'layer':'AUS_2021_AUST_GDA2020',  'node_col':'AUS_CODE_2021',  'parent_col':'root'},
+                    {'layer':'STE_2021_AUST_GDA2020',  'node_col':'STATE_CODE_2021','parent_col':'AUS_CODE_2021'},
+                    {'layer':'GCCSA_2021_AUST_GDA2020','node_col':'GCCSA_CODE_2021',  'parent_col':'STATE_CODE_2021'},
+                    {'layer':'SA4_2021_AUST_GDA2020',  'node_col':'SA4_CODE_2021',  'parent_col':'STATE_CODE_2021'},
+                    {'layer':'SA4_2021_AUST_GDA2020',  'node_col':'SA4_CODE_2021',  'parent_col':'GCCSA_CODE_2021'},
+                    {'layer':'SA3_2021_AUST_GDA2020',  'node_col':'SA3_CODE_2021',  'parent_col':'SA4_CODE_2021'},
+                    {'layer':'SA2_2021_AUST_GDA2020',  'node_col':'SA2_CODE_2021',  'parent_col':'SA3_CODE_2021'},
+                    {'layer':'SA1_2021_AUST_GDA2020',  'node_col':'SA1_CODE_2021',  'parent_col':'SA2_CODE_2021'},
+                    {'layer':'MB_2021_AUST_GDA2020',   'node_col':'MB_CODE_2021',   'parent_col':'SA1_CODE_2021'}
+                ]
+            if "Non_ABS" in fname:
+                self.index = [
+                    {'layer':'SAL_2021_AUST_GDA2020',  'node_col':'SAL_CODE_2021',  'parent_col':'STATE_CODE_2021'},
+                    {'layer':'ADD_2021_AUST_GDA2020',  'node_col':'ADD_CODE_2021',  'parent_col':'AUS_CODE_2021'},
+                    {'layer':'TR_2021_AUST_GDA2020',   'node_col':'TR_CODE_2021',   'parent_col':'STATE_CODE_2021'},
+                    {'layer':'CED_2021_AUST_GDA2020',  'node_col':'CED_CODE_2021',  'parent_col':'STATE_CODE_2021'},
+                    {'layer':'SED_2022_AUST_GDA2020',  'node_col':'SED_CODE_2022',  'parent_col':'STATE_CODE_2021'},
+                    {'layer':'DZN_2021_AUST_GDA2020',  'node_col':'DZN_CODE_2021',  'parent_col':'SA2_CODE_2021'},
+                    {'layer':'POA_2021_AUST_GDA2020',  'node_col':'POA_CODE_2021',  'parent_col':'AUS_CODE_2021'},
+                    {'layer':'LGA_2023_AUST_GDA2020',  'node_col':'LGA_CODE_2023',  'parent_col':'STATE_CODE_2021'}
+                ]
+            if "Indigenous_Structure" in fname:
+                self.index = [
+                    {'layer':'IREG_2021_AUST_GDA2020',  'node_col':'IREG_CODE_2021',  'parent_col':'STATE_CODE_2021'},
+                    {'layer':'IARE_2021_AUST_GDA2020',  'node_col':'IARE_CODE_2021',  'parent_col':'IREG_CODE_2021'},
+                    {'layer':'ILOC_2021_AUST_GDA2020',  'node_col':'ILOC_CODE_2021',  'parent_col':'IARE_CODE_2021'},
+                ]
+            if "SUA" in fname:
+                self.index = [
+                    {'layer':'SOS_2021_AUST_GDA2020',  'node_col':'SOS_CODE_2021',  'parent_col':'STATE_CODE_2021'},
+                    {'layer':'SOSR_2021_AUST_GDA2020',  'node_col':'SOSR_CODE_2021',  'parent_col':'SOS_CODE_2021'},
+                    {'layer':'UCL_2021_AUST_GDA2020',  'node_col':'UCL_CODE_2021',  'parent_col':'SOSR_CODE_2021'},
+                    {'layer':'SUA_2021_AUST_GDA2020',  'node_col':'SUA_CODE_2021',  'parent_col':'AUS_CODE_2021'},
+                ]       
+            self.construct_hierarchy(fname)
+            
+    def print_layers(self):
+        for fname in self.gpkg_files:
+            fpath = os.path.join(self.boundary_path,fname+".gpkg")
+            layers = fiona.listlayers(fpath)
+            for l in layers:
+                print(fpath)
+                print(">",l)
+                df = gpd.read_file(fpath,layer=l)
+                cols = list(df.columns)
+                for c in cols:
+                    print(" >",c)
+                
+    def print_layers_specificfile(self,fname):
+        fpath = os.path.join(self.boundary_path,fname+".gpkg")
+        layers = fiona.listlayers(fpath)
+        for l in layers:
+            print(fpath)
+            print(">",l)
+            df = gpd.read_file(fpath,layer=l)
+            print(list(df.columns))
+            
+    def construct_hierarchy(self,fpath): 
+        for idx in self.index:
+            layer = idx['layer']
+            parent_col = idx['parent_col']
+            node_col = idx['node_col']
+            full_fpath = os.path.join(self.boundary_path,fpath)+".gpkg"
+            print(f"Running: {layer}, assigning {node_col} --> {parent_col}")
+            print("Filename:",full_fpath)
+            df = gpd.read_file(full_fpath, layer=layer)
+            cols = list(df.columns)
+            for c in cols:
+                print(" >",c)
+                
+            df = df[df['AUS_CODE_2021'] != "ZZZ"]
+            for _, row in df.iterrows():
+                geometry = row['geometry']
+                area_sqkm = row['AREA_ALBERS_SQKM']
+                uri = row['ASGS_LOCI_URI_2021']
+                
+                level_node = node_col.split("_")[0]
+                level_parent = parent_col.split("_")[0]
+                
+                label = None if node_col in ["SA1_CODE_2021",'MB_CODE_2021','DZN_CODE_2021'] else row[node_col.replace("CODE","NAME")]
+                
+                parent_node_key = "root" if layer == "AUS_2021_AUST_GDA2020" else (row[parent_col])
+                
+                if parent_node_key not in self.G.nodes:
+                    self.G.add_node(parent_node_key,
+                                    label=label,
+                                    uri=uri,
+                                    geometry=geometry,
+                                    area_sqkm=area_sqkm,
+                                    level=level_parent)
+
+                current_node_key = row[node_col]
+
+                if current_node_key not in self.G.nodes: 
+                    self.G.add_node(current_node_key,
+                                    label=label,
+                                    uri=uri,
+                                    geometry=geometry,
+                                    area_sqkm=area_sqkm,
+                                    level=level_node)
+                    
+                self.G.add_edge(parent_node_key, current_node_key)
+                
+    def save(self):
+        print("SAVING:",self.fileout)
+        nx.write_gpickle(self.G,self.fileout)
+
+    def load(self):
+        print("READING:",self.fileout)
+        self.G = nx.read_gpickle(self.fileout)
+
+    def print_tree(self,root_node,depth,max_depth,exclude_level=None):
+        print_tree(root_node, max_depth=max_depth, depth=depth,exclude_level=exclude_level)
+    
+    def get_nodes_by_level(self,level):
+        return get_nodes_by_level(self.G,level)
+    
+    def get_node_by_label(self,label):
+        return get_node_by_label(self.G,label)
+        
 def polygons_within_radius(gdf,lat,lon,radius):
     """Find polygons within a given radius of a center point.
     
@@ -66,6 +303,9 @@ class Boundary(Datasets):
     def __init__(self,dataset_path):
         super().__init__(dataset_path)
         self.dataset_path = dataset_path
+        
+        self.graph = GeoHierarchy(self.boundary_path)
+        self.graph.load()
         
         files = glob.glob(os.path.join(self.boundary_path,"*.gpkg"))
         self.Areas = {}
