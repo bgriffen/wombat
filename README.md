@@ -6,14 +6,9 @@
 
 Wombat is a Python toolkit designed help answer geospatial related questions about Australian cities & regions. A simple to use set of functionalities enable the querying of of a large number of open-source datasets *simultaneously*. These datasets range from aerial imagery, building morphology, census information (e.g. demographics), points of interest, elevation, flooding, education, property sale history and transport networks. The goal of wombat is to make it a good means to an ends, such that data products can be easily fed into other downstream geospatial analyses and visualisations.
 
-
- ## ⛏️ Motivation
-
- Many geospatial projects are leviathans in their deployment with high interdependent systems and datasets that are quickly supersceded. As a result, these house-of-cards systems often have a lifespan of 1-2 years then become archived, either owing to funding priority changes or simply developer migration to other interests. In an ever growing avalanche of public data, we need more open source tools to better understand the world we live in and where we are going. Wombat is being developed in aid of achieving more, with less. 
-
  **Disclaimer:** The developer has no prior geospatial experience and so your mileage may vary. This project is a "learn by doing" exercise and very much a *work in progress*. 
  
- Lastly, this builds of the shoulders of many other works[^1][^2][^3][^4][^5].
+ Lastly, this builds of the shoulders of many other works[^1][^2][^3][^4][^5] (and many more) - thank you.
 
 ## 📖 Table of Contents
 
