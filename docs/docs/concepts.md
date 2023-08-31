@@ -50,7 +50,7 @@ The Main Structure is developed by the ABS and is used to release and analyse a 
 * Significant Urban Areas (SUAs) represent individual Urban Centres or clusters of related Urban Centres with a core urban population of over 10,000 people.
 Non ABS Structures
 
-## The Non ABS Structures consist of eight geographies:
+### The Non ABS Structures consist of eight geographies:
 
 * Local Government Areas are an ABS Mesh Block representation of gazetted Local Government boundaries as defined by each state and territory.
 * State Electoral Divisions are an ABS Mesh Block approximation of state electoral districts.
