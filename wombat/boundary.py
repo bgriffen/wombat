@@ -7,6 +7,7 @@ from wombat.datasets import Datasets,City
 import glob
 import fiona
 import networkx as nx
+import numpy as np
 
 def print_tree(G, root_node, max_depth=2, depth=0,exclude_level=None):
     top_node = G.nodes[root_node]
@@ -228,22 +229,29 @@ class GeoHierarchy:
                 self.G.add_edge(parent_node_key, current_node_key)
                 
     def save(self):
-        print("SAVING:",self.fileout)
+        #print("SAVING:",self.fileout)
         nx.write_gpickle(self.G,self.fileout)
 
     def load(self):
-        print("READING:",self.fileout)
+        #print("READING:",self.fileout)
         self.G = nx.read_gpickle(self.fileout)
 
-    def print_tree(self,root_node,depth,max_depth,exclude_level=None):
-        print_tree(root_node, max_depth=max_depth, depth=depth,exclude_level=exclude_level)
+    def print_tree(self,root_node,depth=0,max_depth=2,exclude_level=None):
+        print_tree(G=self.G,
+                   root_node=root_node, 
+                   max_depth=max_depth, 
+                   depth=depth,
+                   exclude_level=exclude_level)
     
     def get_nodes_by_level(self,level):
         return get_nodes_by_level(self.G,level)
     
     def get_node_by_label(self,label):
         return get_node_by_label(self.G,label)
-        
+    
+    def get_subnetwork(self, node, depth):
+        return get_subnetwork(self.G,node,depth)
+    
 def polygons_within_radius(gdf,lat,lon,radius):
     """Find polygons within a given radius of a center point.
     
@@ -285,7 +293,7 @@ Australia_BoundingBox = {
     'maxx': 153.9933464,
     'maxy': -9.1870234
 }
-
+#
 Australia_BoundingBox_geom = Polygon([(Australia_BoundingBox['minx'],Australia_BoundingBox['miny']), 
                                       (Australia_BoundingBox['minx'],Australia_BoundingBox['maxy']), 
                                       (Australia_BoundingBox['maxx'],Australia_BoundingBox['maxy']),
