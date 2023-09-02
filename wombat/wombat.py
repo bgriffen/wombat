@@ -19,7 +19,7 @@ warnings.filterwarnings('ignore')
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 from wombat.datasets import City
-
+import geopandas as gpd
 import leafmap.foliumap as leafmap
 
 def new_map(center,zoom=10):
@@ -41,7 +41,9 @@ get_gccs_name = {"Canberra":"Australian Capital Territory",
                 "Sydney":"Greater Sydney",
                 "Perth":"Greater Perth"}
 
-
+def graph_to_geopandas(item):
+    return gpd.GeoDataFrame(item,crs='EPSG:4326')
+    
 class Wombat(leafmap.Map):
     def __init__(self,dataset_path,**kwargs):
         super().__init__(**kwargs)
@@ -55,42 +57,18 @@ class Wombat(leafmap.Map):
         #self.Map = new_map(center=[-27.4698, 153.0251],zoom=self.zoom)
         #self.country = country
     
-    def set_area(self,statistical_area,column_name=None,filter_value=None):
-        """_summary_
-        Args:
-            statistical_area (str): Statistical Area name (e.g. "SA3")
-            column_name (str, optional): Column of the statistical area (e.g. "SA_NAME21"). Defaults to None.
-            filter_value (str, optional): Value to filter over (e.g. "Greater Brisbane"). Defaults to None.
-        """ 
-        assert statistical_area in self.Boundary.Areas.keys(),print("Set a proper area",self.Boundary.Areas.keys())
-        self.Boundary.set_area(statistical_area,column_name=column_name,filter_value=filter_value)
-    
     def set_area_as_country(self):
-        self.Boundary.set_area(statistical_area="AUS",
-                               column_name="AUS_NAME_2021",
-                               filter_value="Australia")
+        self.gdf = self.Boundary.get_country()
         
     def set_area_as_state(self,state=None):
-        if state is not None:
-            self.Boundary.set_area(statistical_area="STE",
-                               column_name="STATE_NAME_2021",
-                               filter_value=state)
-        else:
-            self.Boundary.set_area(statistical_area="STE")
-    
-    def set_area_as_sa3_for_state(self,state):
-        self.Boundary.set_area(statistical_area="SA3",
-                               column_name='STATE_NAME_2021', 
-                               filter_value=state)
-                
+        self.gdf = self.Boundary.get_state(state)
+        
+    def set_area_as_sa3(self,belonging_to):
+        self.gdf = self.Boundary.get_sa3s(belonging_to)
+        
     # Method to set the city for analysis and initialize Urbanity object instance
     def set_area_as_city(self,city):
-        assert city in get_gccs_name.keys(),print("That city won't work, try a capital.")
-        filter_value = get_gccs_name[city]
-        self.Boundary.set_area(statistical_area="SA3",
-                               column_name="GCCSA_NAME_2021",
-                               filter_value=filter_value)
-        
+        self.gdf = self.Boundary.get_gcc(city)
         #self.Urbanity = Urbanity(dataset_path=self.dataset_path,city=city)
         self.Buildings = Buildings(dataset_path=self.dataset_path,city=city)
         #self.Viz = Viz(dataset_path=self.dataset_path,city=city,zoom=self.zoom)
