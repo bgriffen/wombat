@@ -25,29 +25,29 @@ The Main Structure is developed by the ABS and is used to release and analyse a 
 
 ### Indigenous Structure
 
-* The Indigenous Structure enables the publication and analysis of statistics for the Aboriginal and Torres Strait Islander population of Australia.
+The Indigenous Structure enables the publication and analysis of statistics for the Aboriginal and Torres Strait Islander population of Australia.
 * Indigenous Locations (ILOCs) represent small Aboriginal and Torres Strait Islander communities (urban and rural) with a minimum population of about 90 people.
 * Indigenous Areas (IAREs) are medium sized geographical areas designed to facilitate the release of more detailed statistics for Aboriginal and Torres Strait Islander people.
 * Indigenous Regions (IREGs) are large geographical areas based on historical boundaries. The larger population of Indigenous Regions enables highly detailed analysis.
 
 ### Urban Centres and Localities, and Section of State Structure
 
-* Urban Centres and Localities and Section of State represent areas of concentrated urban development.
+Urban Centres and Localities and Section of State represent areas of concentrated urban development.
 * Urban Centres and Localities (UCLs) are aggregations of SA1s which meet population density criteria or contain other urban infrastructure. As populations and urban areas change, these UCLs are also designed to change, and areas can come into or out of the classification. This ensures meaningful data is available for urban areas and there are accurate comparisons over time.
 * Section of State (SOS) groups the UCLs into classes of urban areas based on population size. SOS does not explicitly define rural Australia, however any population not contained in a UCL is considered to be rural. 
 * Section of State Range (SOSR) provides a more detailed classification than SOS. This enables statistical comparison of differently sized urban centres and rural areas.
 
 ### Remoteness Structure
 
-* Remoteness Areas divide Australia and the states and territories into 5 classes of remoteness on the basis of their relative access to services. Remoteness Areas are based on the Accessibility/Remoteness Index of Australia Plus (ARIA+), produced by the Hugo Centre for Population and Migration Studies.
+Remoteness Areas divide Australia and the states and territories into 5 classes of remoteness on the basis of their relative access to services. Remoteness Areas are based on the Accessibility/Remoteness Index of Australia Plus (ARIA+), produced by the Hugo Centre for Population and Migration Studies.
 
 ### Greater Capital City Statistical Area Structure
 
-* Greater Capital City Statistical Areas (GCCSAs) represent the functional area of each of the eight state and territory capital cities.
+Greater Capital City Statistical Areas (GCCSAs) represent the functional area of each of the eight state and territory capital cities.
 
 ### Significant Urban Area Structure
 
-* Significant Urban Areas (SUAs) represent individual Urban Centres or clusters of related Urban Centres with a core urban population of over 10,000 people.
+Significant Urban Areas (SUAs) represent individual Urban Centres or clusters of related Urban Centres with a core urban population of over 10,000 people.
 Non ABS Structures
 
 ### The Non ABS Structures consist of eight geographies:
