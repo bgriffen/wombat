@@ -8,54 +8,86 @@ import glob
 import fiona
 import networkx as nx
 import numpy as np
+from collections import deque
 
-def print_tree(G, root_node, max_depth=2, depth=0,exclude_level=None):
-    top_node = G.nodes[root_node]
-    treestr = u"%s %s" % (top_node['level'], top_node['label'])
-    print(treestr.upper())
-    print_tree_recur(G, root_node, max_depth=max_depth, depth=depth,exclude_level=None)
+def bfs(graph, start_node, depth, direction='successors'):
+    queue = deque([(start_node, 0)])
+    while queue:
+        node, level = queue.popleft()
+        
+        # We skip when level = 0 (yielding only successors or predecessors)
+        if level > 0:
+            yield node
+            
+        if level > depth: 
+            return
+
+        neighbors = getattr(graph, direction)(node)
+        for neighbor in neighbors:
+            queue.append((neighbor, level + 1))
+
+
+def get_cousins(G, node):
+    """Returns a list of cousins of a given node."""
     
-def print_tree_recur(G, root_node, max_depth=2, depth=0,exclude_level=None):
-    """Prints a tree recursively starting from a root node.
+    # get parents of the given node
+    parents = G.predecessors(node)
+    
+    # get siblings including the node itself
+    siblings = set()
+    for parent in parents:
+        children_generator = G.successors(parent)
+        siblings.update(children_generator)
+        
+    # remove the node from the siblings set to get its cousins
+    siblings.remove(node)
+    return siblings
+
+def print_tree(G, node, depth, parents=False, children=True, cousins=False):
+    """
+    Prints the parents, children and neighbors of a node.
     
     Args:
         G (networkx.Graph): The graph representing the tree.
-        root_node: The root node of the tree.
-        max_depth (int, optional): The maximum depth to traverse the tree. Defaults to 2.
-        depth (int, optional): The current depth of the recursion. Defaults to 0.
-        exclude_level (optional): The level to exclude from printing. Defaults to None.
+        node: The target node.
+        depth: The max depth to scan parents/children.
+    
     
     Returns:
         None
-    
-    Example:
-        >>> G = networkx.Graph()
-        >>> G.add_node(1, level=0, label='A', area_sqkm=100)
-        >>> G.add_node(2, level=1, label='B', area_sqkm=50)
-        >>> G.add_edge(1, 2)
-        >>> print_tree_recur(G, 1)
-        > A (100km2)
-        >> B (50km2)
     """
-    
-    if depth <= max_depth:
-        # get edges from root node
-        edges = [(root_node, child) for child in G.neighbors(root_node)]
-        for (parent, child) in edges:
-            node = G.nodes[child]
-            if np.isfinite(node['area_sqkm']):
-                area = node['area_sqkm']
+    node_id = node[0]
+    node_info = node[1]
+    def print_nodes(nodes_to_print, title):
+        print(title)
+        for n in nodes_to_print:
+            node_data = G.nodes[n]
+            print(node_data)
+            if np.isfinite(node_data['area_sqkm']):
+                area = node_data['area_sqkm']
             else:
                 area = 0
-            
-            if exclude_level is not None and node['level'] == exclude_level:
-                continue
-            
-            treestr = u"> %s %s %s (%ikm2)" % (">>"*depth, node['level'], node['label'], area)
-            print(treestr.ljust(8))
-            
-            # recursive call to print its children
-            print_tree_recur(G, child, max_depth, depth+1)
+            str_out = u"> %s (%ikm2)" % (node_data['label'], area)
+            print(str_out.ljust(8))
+    
+       
+    # get parents
+    if parents:
+        parents_generator = bfs(G, node_id, depth, 'predecessors')
+        parents = [parent for parent in parents_generator]
+        print(node_info)
+        print_nodes(parents, "Parents of {}:".format(node_info['label']))
+
+    # get children
+    if children:
+        children_generator = bfs(G, node_id, depth, 'successors')
+        children = [child for child in children_generator]
+        print_nodes(children, "\nChildren of {}:".format(node_info['label']))
+    
+    # get neighbors
+    if cousins:
+        cousins = get_cousins(G, node_id)
+        print_nodes(cousins, "\nCousins of {}:".format(node))
 
 def get_node_by_label(G, target_label):
     """Returns the first node in the graph `G` that has a label matching `target_label`.
@@ -102,8 +134,8 @@ def get_subnetwork(G, node, depth):
     Returns:
         networkx.Graph: The subnetwork of the given node up to the specified depth.
     """
-    
-    sub_G = nx.ego_graph(G, node, radius=depth)
+    node_id = node[0]
+    sub_G = nx.ego_graph(G, node_id, radius=depth)
     return sub_G
 
 class GeoHierarchy:
@@ -114,18 +146,35 @@ class GeoHierarchy:
         self.fileout = os.path.join(boundary_path,"%s.gpickle"%fname_save)
         
         self.G = nx.DiGraph()
-        self.G.add_node("root", label='root', level="AUS")
-        self.gpkg_files = ['ASGS_2021_Main_Structure_GDA2020',
-                            'ASGS_Ed3_Non_ABS_Structures_GDA2020_updated_2023',
-                            'ASGS_2021_SUA_UCL_SOS_SOSR_GPKG_GDA2020',
-                            'ASGS_Ed3_2021_Indigenous_Structure_GDA2020']
         
+        self.gpkg_files = ['ASGS_2021_Main_Structure_GDA2020',
+                           'ASGS_Ed3_Non_ABS_Structures_GDA2020_updated_2023',
+                           'ASGS_2021_SUA_UCL_SOS_SOSR_GPKG_GDA2020',
+                           'ASGS_Ed3_2021_Indigenous_Structure_GDA2020']
+        
+        # initialise root boundary node if graph file does not exist
+        if not os.path.exists(self.fileout):
+            full_fpath = os.path.join(self.boundary_path,'ASGS_2021_Main_Structure_GDA2020')+".gpkg"
+            df = gpd.read_file(full_fpath,layer='AUS_2021_AUST_GDA2020')
+            aus_row = df.iloc[0]
+            geometry = aus_row['geometry']
+            area_sqkm = aus_row['AREA_ALBERS_SQKM']
+            uri = aus_row['ASGS_LOCI_URI_2021']
+            label = aus_row['AUS_NAME_2021']
+            node_id = aus_row['AUS_CODE_2021']
+            self.G.add_node(node_id,
+                                label=label,
+                                uri=uri,
+                                geometry=geometry,
+                                area_sqkm=area_sqkm,
+                                level='AUS')
+            
     def construct_full_hierarchy(self):
         for fname in self.gpkg_files:
             self.index = None
             if "Main" in fname:
                 self.index = [
-                    {'layer':'AUS_2021_AUST_GDA2020',  'node_col':'AUS_CODE_2021',  'parent_col':'root'},
+                    #{'layer':'AUS_2021_AUST_GDA2020',  'node_col':'AUS_CODE_2021',  'parent_col':'root'},
                     {'layer':'STE_2021_AUST_GDA2020',  'node_col':'STATE_CODE_2021','parent_col':'AUS_CODE_2021'},
                     {'layer':'GCCSA_2021_AUST_GDA2020','node_col':'GCCSA_CODE_2021',  'parent_col':'STATE_CODE_2021'},
                     {'layer':'SA4_2021_AUST_GDA2020',  'node_col':'SA4_CODE_2021',  'parent_col':'STATE_CODE_2021'},
@@ -159,7 +208,7 @@ class GeoHierarchy:
                     {'layer':'UCL_2021_AUST_GDA2020',  'node_col':'UCL_CODE_2021',  'parent_col':'SOSR_CODE_2021'},
                     {'layer':'SUA_2021_AUST_GDA2020',  'node_col':'SUA_CODE_2021',  'parent_col':'AUS_CODE_2021'},
                 ]       
-            self.construct_hierarchy(fname)
+            self.construct_hierarchy_for_file(fname)
             
     def print_layers(self):
         for fname in self.gpkg_files:
@@ -182,7 +231,7 @@ class GeoHierarchy:
             df = gpd.read_file(fpath,layer=l)
             print(list(df.columns))
             
-    def construct_hierarchy(self,fpath): 
+    def construct_hierarchy_for_file(self,fpath): 
         for idx in self.index:
             layer = idx['layer']
             parent_col = idx['parent_col']
@@ -229,20 +278,16 @@ class GeoHierarchy:
                 self.G.add_edge(parent_node_key, current_node_key)
                 
     def save(self):
-        #print("SAVING:",self.fileout)
         nx.write_gpickle(self.G,self.fileout)
-
+        nx.write_gexf(self.G, "%s.gexf"%self.fileout)
+        
     def load(self):
-        #print("READING:",self.fileout)
-        self.G = nx.read_gpickle(self.fileout)
+        if os.path.exists(self.fileout):
+            self.G = nx.read_gpickle(self.fileout)
 
-    def print_tree(self,root_node,depth=0,max_depth=2,exclude_level=None):
-        print_tree(G=self.G,
-                   root_node=root_node, 
-                   max_depth=max_depth, 
-                   depth=depth,
-                   exclude_level=exclude_level)
-    
+    def print_tree(self,node,depth=1,children=True,parents=False,cousins=False):
+        print_tree(self.G,node,depth,children=children,parents=parents,cousins=cousins)
+        
     def get_nodes_by_level(self,level):
         return get_nodes_by_level(self.G,level)
     
@@ -252,6 +297,12 @@ class GeoHierarchy:
     def get_subnetwork(self, node, depth):
         return get_subnetwork(self.G,node,depth)
     
+    def get_parents(self,node,depth=1):
+        return bfs(self.G, node[0], depth=depth, direction='successors')
+             
+    def get_children(self,node,depth=1):
+        return bfs(self.G, node[0], depth=depth, direction='predecessors')
+
 def polygons_within_radius(gdf,lat,lon,radius):
     """Find polygons within a given radius of a center point.
     
