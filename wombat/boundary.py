@@ -10,6 +10,7 @@ import networkx as nx
 import numpy as np
 from collections import deque
 from pyvis.network import Network as pyvisNetwork
+import pandas as pd
 
 def has_parent_with_label(G, node, parent_label):
     """Check if node has any parent (up to the root) with the specified label.
@@ -29,7 +30,7 @@ def has_parent_with_label(G, node, parent_label):
             return True
     return False
 
-def get_nodes_by_level_and_parent_traverse(G, level, parent_label):
+def get_parents_with_label_traverse(G, level, parent_label):
     """Get nodes by level and parent label.
     
     Args:
@@ -68,8 +69,52 @@ def get_nodes_by_level_and_label(G, level, label):
             matched_nodes.append(node)
     return matched_nodes
 
+def get_children_with_level(G, node, child_level):
+    """Get all children (successors) of a node at the given level.
+    
+    Args:
+        G(networkx.Graph): The graph to search for nodes.
+        node: Node to start from.
+        child_level string: The level name of the child node.
+        
+    Returns:
+        list: A list of children nodes with the specified level name.
+    """
+    
+    children = []
+    for successor in G.successors(node):
+        if G.nodes[successor]['level'] == child_level:
+            children.append(successor)
+            continue
+        else:
+            children += get_children_with_level(G, successor, child_level)
 
-def get_nodes_by_level_and_parent(G, level, parent_label,traverse=False):
+    return children
+
+def get_children_with_label(G, node, child_label):
+    """Get all children (successors) of a node at the given level.
+    
+    Args:
+        G(networkx.Graph): The graph to search for nodes.
+        node: Node to start from.
+        child_label string: The level name of the child node.
+        
+    Returns:
+        list: A list of children nodes with the specified level name.
+    """
+    
+    children = []
+    for successor in G.successors(node):
+        if G.nodes[successor]['label'] == child_label:
+            children.append(successor)
+            continue
+        else:
+            children += get_children_with_level(G, successor, child_label)
+
+    return children
+
+
+def get_parents_with_label(G, level, parent_label,traverse=False):
     """Get nodes by level and parent label.
     
     Args:
@@ -94,6 +139,35 @@ def get_nodes_by_level_and_parent(G, level, parent_label,traverse=False):
             for parent in parents:
                 # If the parent's label matches, add the node to the list
                 if parent_label in G.nodes[parent]['label']: # == parent_label:
+                    matched_nodes.append(node)
+                    break  # we've found a valid parent node so no need to check others
+    return matched_nodes
+
+def get_parents_with_level(G, level, parent_level):
+    """Get nodes by level and parent label.
+    
+    Args:
+        G (networkx.Graph): The graph to search for nodes.
+        level (int): The level of nodes to retrieve.
+        parent_label (any type): The label of the parent node.
+    
+    Returns:
+        list: A list of nodes that belong to the specified level and have the specified parent node.
+    """
+    
+    matched_nodes = []
+    for node in G.nodes:
+        # Check if the node is at the given level
+        if G.nodes[node]['level'] == level:
+            # Check all predecessors (parents) of the node
+            parents = G.predecessors(node)
+            # Have to think more about how to search back up the tree
+            # if traverse:
+            #parents = bfs(G, node, depth, 'predecessors')
+            #   parents = [parent for parent in parents_generator]
+            for parent in parents:
+                # If the parent's label matches, add the node to the list
+                if parent_level == G.nodes[parent]['level']: # == parent_label:
                     matched_nodes.append(node)
                     break  # we've found a valid parent node so no need to check others
     return matched_nodes
@@ -209,6 +283,7 @@ def get_nodes_by_level(G, level):
             matched_nodes.append(node)
     return matched_nodes
 
+
 def get_subnetwork(G, node, depth,remove_geometry=False):
     """Get the subnetwork of a given node in a graph up to a certain depth.
     
@@ -228,13 +303,22 @@ def get_subnetwork(G, node, depth,remove_geometry=False):
                 del sub_G.nodes[nodei]['geometry']
     return sub_G
 
+def build_index(G,index_type):
+    index = {}
+    for node in G.nodes:
+        idx = G.nodes[node].get(index_type)
+        if idx not in index:
+            index[idx] = []
+        index[idx].append(node)
+    return index
+
+
 class GeoHierarchy:
-    
     def __init__(self, boundary_path,fname_save = "2023_AUS_Boundaries"):
         self.boundary_path = boundary_path
         self.fname_save = fname_save
         self.fileout = os.path.join(boundary_path,"%s.gpickle"%fname_save)
-        
+        self.fileout_gexf = os.path.join(boundary_path,"%s.gexf"%fname_save)
         self.G = nx.DiGraph()
         
         self.gpkg_files = ['ASGS_2021_Main_Structure_GDA2020',
@@ -300,6 +384,19 @@ class GeoHierarchy:
                 ]       
             self.construct_hierarchy_for_file(fname)
             
+    def get_nodes(self,level=None, label=None):
+        if level is not None:
+            nodes_level = set(self.level_index.get(level, []))
+        if label is not None:
+            nodes_label = set(self.label_index.get(label, []))
+        
+        if level is not None and label is not None:
+            return list(nodes_level & nodes_label)
+        if level is None and label is not None:
+            return list(nodes_label)
+        if level is not None and label is None:
+            return list(nodes_level)
+   
     def print_layers(self):
         for fname in self.gpkg_files:
             fpath = os.path.join(self.boundary_path,fname+".gpkg")
@@ -367,45 +464,65 @@ class GeoHierarchy:
                     
                 self.G.add_edge(parent_node_key, current_node_key)
                 
-    def save(self):
-        nx.write_gpickle(self.G,self.fileout)
-        # need to decide if we want to remove geometry
-        outG = self.G.copy()
-        for nodei in outG.nodes:
-            if "geometry" in subG.nodes[nodei]:
-                del subG.nodes[nodei]['geometry']
-        nx.write_gexf(outG, "%s.gexf"%self.fileout)
+    def save(self,gpickle=True,gexf=False):
+        if gpickle:
+            nx.write_gpickle(self.G,self.fileout)
+            
+        if gexf:
+            outG = self.G.copy()
+            for nodei in outG.nodes:
+                if "geometry" in outG.nodes[nodei]:
+                    del outG.nodes[nodei]['geometry']
+            nx.write_gexf(outG, "%s.gexf"%self.fileout_gexf)
         
     def load(self):
         if os.path.exists(self.fileout):
             self.G = nx.read_gpickle(self.fileout)
-
+            # Then you can use this index for quick lookups:
+            self.level_index = build_index(self.G,'level')
+            #nodes_at_level_x = level_index.get(x)
+            self.label_index = build_index(self.G,'label')
+            
     def print_tree(self,node,depth=1,children=True,parents=False,cousins=False):
         print_tree(self.G,node,depth,children=children,parents=parents,cousins=cousins)
         
-    def get_nodes_by_level(self,level):
-        return get_nodes_by_level(self.G,level)
+    #def get_nodes_by_level(self,level):
+    #    return self.graph.get_nodes(level=level)   #get_nodes_by_level(self.G,level)
     
-    def get_node_by_label(self,label):
-        return get_node_by_label(self.G,label)
+    #def get_node_by_label(self,label):
+    #    return self.graph.get_nodes(level=label) #get_node_by_label(self.G,label)
     
-    def get_nodes_by_level_and_label(self,level,label):
-        return get_nodes_by_level_and_label(self.G,level,label)
+    #def get_nodes_by_level_and_label(self,level,label):
+    #    return get_nodes_by_level_and_label(self.G,level,label)
     
-    def get_nodes_by_level_and_parent(self,label,parent_label):
-        return get_nodes_by_level_and_parent(self.G, label, parent_label)
-            
+    def get_parents_with_label(self,label,parent_label):
+        return get_parents_with_label(self.G, label, parent_label)
+    
+    def get_parents_with_level(self,label,parent_level):
+        return get_parents_with_level(self.G, label, parent_level)
+                     
     def get_subnetwork(self, node, depth,remove_geometry=False):
         return get_subnetwork(self.G,node,depth,remove_geometry)
     
     def get_parents(self,node,depth=1):
         parents = bfs(self.G, node[0], depth=depth, direction='predecessors')
-        return [self.G.nodes[n] for n in parents]
+        return list(parents) #[self.G.nodes[n] for n in parents]
     
     def get_children(self,node,depth=1):
         children =  bfs(self.G, node[0], depth=depth, direction='successors')
-        return [self.G.nodes[c] for c in children]
+        return list(children) #[self.G.nodes[c] for c in children]
     
+    def get_children_with_level(self,node,child_level_label):
+        children_at_level = get_children_with_level(self.G,node,child_level_label)
+        return list(children_at_level) #[self.G.nodes[c]['id'] for c in children_at_level]
+
+    def search_nodes(self, level, parent_label=None): #, traverse=False):
+        if parent_label is not None:
+            node_ids = get_parents_with_label_traverse(self.G, level, parent_label)
+        else:
+            node_ids = self.level_index[level] #(G,level)
+        return node_to_gdf(self.G,node_ids)
+
 
 def polygons_within_radius(gdf,lat,lon,radius):
     """Find polygons within a given radius of a center point.
@@ -510,19 +627,18 @@ class BoundaryJSON(Datasets):
     def set_radius(self,radius=10):
         self.gdf = polygons_within_radius(self.gdf,self.City.lat,self.City.lon,radius)
 
-def node_to_gdf(G,node_ids):
+def node_to_gdf(G,node_ids,level=None,label=None):
     #return gpd.GeoDataFrame(nodes,crs="EPSG:4326").sort_values(['level','label'])
-    gdf = gpd.GeoDataFrame([G.nodes[c] for c in node_ids],crs="EPSG:4326").sort_values(['level','label'])
+    gdf = gpd.GeoDataFrame([G.nodes[c] for c in node_ids],crs="EPSG:4326")
+    gdf.index = node_ids
+    gdf = gdf.sort_values(['level','label'])
     gdf = gdf[~gdf['geometry'].isna()]
+    if level is not None:
+        gdf = gdf[gdf['level'] == level]
+    if label is not None:
+        gdf = gdf[gdf['label'] == label]
     return gdf
 
-def search_parents(G,level,parent_label=None,traverse=False):
-    if parent_label is not None:
-        node_ids = get_nodes_by_level_and_parent_traverse(G, level, parent_label)
-    else:
-        node_ids = get_nodes_by_level(G,level)
-    return node_to_gdf(G,node_ids)
-    
 class Boundary(Datasets):
     def __init__(self,dataset_path):
         super().__init__(dataset_path)
@@ -539,59 +655,142 @@ class Boundary(Datasets):
                 self.Areas[l.split("_")[0]] = {'filename':filei,'layer':l}
 
         self.Australia_BoundingBox_Poly = gpd.GeoDataFrame(geometry=g)
+         
+        info = {'ADD':"Australian Drainage Divisions are an ABS Mesh Block approximation of drainage divisions as provided through Australian Hydrological Geospatial Fabric.",
+                'ALL':"None",
+                'AUS':"Australia (AUS) is the largest region in the ASGS and represents the geographic extent of Australia.",
+                'CED':"Commonwealth Electoral Divisions are an ABS Mesh Block approximation of the Australian Electoral Commission (AEC) federal electoral division boundaries.",
+                'DZN':"Destination Zones are co-designed with state and territory transport authorities for the analysis of Place of Work Census of Population and Housing data, commuting patterns and the development of transport policy.",
+                'GCCSA':"Greater Capital City Statistical Areas (GCCSAs) represent the functional area of each of the eight state and territory capital cities.",
+                'IARE':"Indigenous Areas (IAREs) are medium sized geographical areas designed to facilitate the release of more detailed statistics for Aboriginal and Torres Strait Islander people.",
+                'ILOC':"Indigenous Locations (ILOCs) represent small Aboriginal and Torres Strait Islander communities (urban and rural) with a minimum population of about 90 people.",
+                'IREG':"Indigenous Regions (IREGs) are large geographical areas based on historical boundaries. The larger population of Indigenous Regions enables highly detailed analysis.",
+                'LGA':"Local Government Areas are an ABS Mesh Block representation of gazetted Local Government boundaries as defined by each state and territory.",
+                'MB':"Mesh Blocks (MBs) are the smallest geographic areas defined by the ABS and form the building blocks for the larger regions of the ASGS. Most Mesh Blocks contain 30 to 60 dwellings.",
+                'POA':"Postal Areas are an ABS Mesh Block approximation of a general definition of postcodes.",
+                'SA1':"Statistical Areas Level 1 (SA1s) are designed to maximise the geographic detail available for Census of Population and Housing data while maintaining confidentiality. Most SA1s have a population of between 200 to 800 people.",
+                'SA2':"Statistical Areas Level 2 (SA2s) are medium-sized general purpose areas built to represent communities that interact together socially and economically. Most SA2s have a population range of 3,000 to 25,000 people.",
+                'SA3':"Statistical Areas Level 3 (SA3s) are designed for the output of regional data and most have populations between 30,000 and 130,000 people.",
+                'SA4':"Statistical Areas Level 4 (SA4s) are designed for the output of a variety of regional data, and represent labour markets and the functional area of Australian capital cities. Most SA4s have a population of over 100,000 people.",
+                'SAL':"Suburbs and Localities (formerly State Suburbs) are an ABS Mesh Block approximation of gazetted localities.",
+                'SED':"State Electoral Divisions are an ABS Mesh Block approximation of state electoral districts.",
+                'SOS':"Section of State (SOS) groups the UCLs into classes of urban areas based on population size. SOS does not explicitly define rural Australia, however any population not contained in a UCL is considered to be rural.",
+                'SOSR':"Section of State Range (SOSR) provides a more detailed classification than SOS. This enables statistical comparison of differently sized urban centres and rural areas.",
+                'STATE':"States and Territories (S/T) are a cartographic representation of legally designated state and territory boundaries.",
+                'SUA':"Significant Urban Areas (SUAs) represent individual Urban Centres or clusters of related Urban Centres with a core urban population of over 10,000 people. Non ABS Structures",
+                'TR':"Tourism Regions are an ABS SA2 approximation of tourism regions as provided by Tourism Research Australia.",
+                "UCL":"Urban Centres and Localities (UCLs) are aggregations of SA1s which meet population density criteria or contain other urban infrastructure. As populations and urban areas change, these UCLs are also designed to change, and areas can come into or out of the classification. This ensures meaningful data is available for urban areas and there are accurate comparisons over time."
+                }      
+        #"Remoteness Areas divide Australia and the states and territories into 5 classes of remoteness on the basis of their relative access to services. Remoteness Areas are based on the Accessibility/Remoteness Index of Australia Plus (ARIA+), produced by the Hugo Centre for Population and Migration Studies.",                           
+        self.info = pd.DataFrame(info,columns=['Code','Description'])
 
-    def get_boundaries_down(self,node):
-        nodes = self.graph.get_children(node,depth=1)
-        return gpd.GeoDataFrame(nodes,crs='EPSG:4326')
+    def get_boundaries_down(self,node,level=None,label=None):
+        node_ids = self.graph.get_children(node,depth=1)
+        gdf = node_to_gdf(self.graph.G,node_ids,level=level,label=label)
+        return gdf
     
-    def get_boundaries_up(self,node):
-        nodes = self.graph.get_parents(node,depth=1)
-        return gpd.GeoDataFrame(nodes,crs='EPSG:4326')
+    def get_boundaries_up(self,node,level=None,label=None):
+        node_ids = self.graph.get_parents(node,depth=1)
+        return node_to_gdf(self.graph.G,node_ids)
     
-    def get_lgas(self,belonging_to=None,traverse=False):
-        #graph_to_name = {"QLD":"Queensland",
-        #                "NSW":"New South Wales",
-        #                "TAS":"Tasmania",
-        #                "WA":"Western Australia",
-        #                "SA":"South Australia",
-        #                "VIC":"Victoria",
-        #                "NT":"Northern Territory",
-        #                "ACT":"Australian Capital Territory"}
-        #node_ids = self.graph.get_nodes_by_level_and_parent("LGA",parent_label=graph_to_name[state])
-        #return gpd.GeoDataFrame([self.graph.G.nodes[c] for c in node_ids],crs="EPSG:4326").sort_values("label")
-        return search_parents(self.graph.G,"LGA",belonging_to,traverse)
+    def get_boundary(self,level=None,label=None):
+        node_ids = self.graph.get_nodes(level=level,label=label)
+        return node_to_gdf(self.graph.G,node_ids)
+
+    def get_parents_with_level_recursive(self,node,level):
+        return get_parents_with_level(node,parent_level=level)
+    
+    def get_parents_with_label_recursive(self,node,label):
+        return get_parents_with_label(node,parent_label=label)
+    
+    def get_children_with_level_recursive(self,node,level):
+        node_ids = self.graph.get_children_with_level(node,child_level=level)
+        return node_to_gdf(self.graph.G,node_ids)
+    
+    def get_children_with_label_recursive(self,node,label):
+        node_ids = self.graph.get_children_with_label(node,child_label=label)
+        return node_to_gdf(self.graph.G,node_ids)
     
     def get_country(self):
-        return search_parents(self.graph.G,"AUS")
+        #node_ids = self.graph.get_nodes_by_level(level="AUS")
+        node_ids = self.graph.get_nodes(level="AUS")
+        return node_to_gdf(self.graph.G,node_ids)
 
     def get_state(self,state):
-        return get_nodes_by_level_and_label(self.graph.G,label=state,level="STE")
+        node_ids = self.graph.get_nodes(label=state,level="STATE")
+        return node_to_gdf(self.graph.G,node_ids)
         
     def get_states(self):
-        return search_parents(self.graph.G,"STE")
-
+        node_ids = self.graph.level_index["STATE"] #self.get_nodes_by_level(level="STE")
+        return node_to_gdf(self.graph.G,node_ids)
+    
+    def get_lgas(self,parent_label=None):
+        if parent_label is not None:
+            return self.graph.search_nodes("LGA",parent_label)
+        node_ids = self.graph.get_nodes(level="LGA")
+        return node_to_gdf(self.graph.G,node_ids)
+    
+    def get_meshblocks(self,parent_label=None):
+        if parent_label is not None:
+            return self.graph.search_nodes("MB",parent_label)
+        node_ids = self.graph.get_nodes(level="MB")
+        return node_to_gdf(self.graph.G,node_ids)
+    
     #def get_lgs(self,belonging_to=None,traverse=False):
     def get_gccs(self):
         node_ids = get_nodes_by_level(self.graph.G,"GCCSA")
         gdf = node_to_gdf(self.graph.G,node_ids)
         gdf = gdf[~gdf['label'].str.contains("Rest of")]
+        gdf = gdf[~gdf['label'].str.contains("Other")]
         return gdf
     
     def get_gcc(self,city):
-        node_ids = get_nodes_by_level_and_label(self.graph.G,"GCCSA",label=city)
-        gdf = node_to_gdf(self.graph.G,node_ids)
+        node_ids = get_nodes_by_level_and_label("GCCSA",label=city)
+        self.graph.get_nodes(level="GGCSA",label=city)
+        
+        gdf = node_to_gdf(node_ids)
         gdf = gdf[~gdf['label'].str.contains("Rest of")]
         return gdf
     
-    def get_sa2s(self,belonging_to=None,traverse=False):
-        return search_parents(self.graph.G,"SA2",belonging_to,traverse)
-
-    def get_sa3s(self,belonging_to=None,traverse=False):
-        return search_parents(self.graph.G,"SA3",belonging_to,traverse)
-
+    def get_sa1s(self,belonging_to=None):
+        return self.graph.search_nodes(level="SA1",parent_label=belonging_to)
+    
+    def get_sa2s(self,belonging_to=None):
+        return self.graph.search_nodes(level="SA2",parent_label=belonging_to)
+    
+    def get_tr(self,belonging_to=None):
+        return self.graph.search_nodes(level="TR",parent_label=belonging_to)
+    
+    def get_sua(self,belonging_to=None):
+        if belonging_to is not None:
+            return self.graph.search_nodes(level="SUA",parent_label=belonging_to)
+        node_ids = self.graph.get_nodes(level="SUA")
+        return node_to_gdf(self.graph.G,node_ids)
+    
+    def get_sa3s(self,belonging_to=None):
+        if belonging_to is not None:
+            return self.graph.search_nodes(level="SA3",parent_label=belonging_to)
+        node_ids = self.graph.get_nodes(level="SA3")
+        return node_to_gdf(self.graph.G,node_ids)
+        
     def get_sa4s(self,belonging_to=None,traverse=False):
-        return search_parents(self.graph.G,"SA4",belonging_to,traverse)
-
+        if belonging_to is not None:
+            return self.graph.search_nodes(level="SA4",parent_label=belonging_to) #,traverse=traverse)
+        node_ids = self.graph.get_nodes(level="SA4")
+        return node_to_gdf(self.graph.G,node_ids)
+        
+    def get_meshblocks(self,belonging_to=None,traverse=False):
+        if belonging_to is not None:
+            return self.graph.search_nodes(level="MB",parent_label=belonging_to) #,traverse=traverse)
+        node_ids = self.graph.get_nodes(level="MB")
+        return node_to_gdf(self.graph.G,node_ids)
+    
+    def get_nodes(self,level,belonging_to=None,traverse=False):
+        if belonging_to is not None:
+            return self.graph.search_nodes(level=level,parent_label=belonging_to) #,traverse=traverse)
+        node_ids = self.graph.get_nodes(level=level)
+        return node_to_gdf(self.graph.G,node_ids)
+    
     def get_full_df(self,column_name=None,filter_value=None):
         list_nodes = list(self.graph.G.nodes(data=True))
         node_ids = [n[0] for n in list_nodes]
