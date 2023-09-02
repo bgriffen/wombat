@@ -279,7 +279,12 @@ class GeoHierarchy:
                 
     def save(self):
         nx.write_gpickle(self.G,self.fileout)
-        nx.write_gexf(self.G, "%s.gexf"%self.fileout)
+        # need to decide if we want to remove geometry
+        outG = self.G.copy()
+        for nodei in outG.nodes:
+            if "geometry" in subG.nodes[nodei]:
+                del subG.nodes[nodei]['geometry']
+        nx.write_gexf(outG, "%s.gexf"%self.fileout)
         
     def load(self):
         if os.path.exists(self.fileout):
