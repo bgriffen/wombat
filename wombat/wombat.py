@@ -45,7 +45,7 @@ def graph_to_geopandas(item):
     return gpd.GeoDataFrame(item,crs='EPSG:4326')
     
 class Wombat(leafmap.Map):
-    def __init__(self,dataset_path,**kwargs):
+    def __init__(self,dataset_path,**kwargs): #='E:\\ResilioData\\Datasets\\wombatdata\\'
         super().__init__(**kwargs)
         
         self.dataset_path = dataset_path
@@ -62,9 +62,24 @@ class Wombat(leafmap.Map):
         
     def set_area_as_state(self,state=None):
         self.gdf = self.Boundary.get_state(state)
-        
+    
+    def set_area_as_states(self):
+        self.gdf = self.Boundary.get_states()
+    
+    def set_area_as_sa4(self,belonging_to):
+        self.gdf = self.Boundary.get_sa4(belonging_to)
+      
     def set_area_as_sa3(self,belonging_to):
-        self.gdf = self.Boundary.get_sa3s(belonging_to)
+        self.gdf = self.Boundary.get_sa3(belonging_to)
+    
+    def set_area_as_sa2(self,belonging_to):
+        self.gdf = self.Boundary.get_sa2(belonging_to)
+        
+    def set_area_as_sa1(self,belonging_to):
+        self.gdf = self.Boundary.get_sa1(belonging_to)
+    
+    def set_area_as_meshblocks(self,belonging_to):
+        self.gdf = self.Boundary.get_meshblocks(belonging_to)
         
     # Method to set the city for analysis and initialize Urbanity object instance
     def set_area_as_city(self,city):

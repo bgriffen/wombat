@@ -312,7 +312,6 @@ def build_index(G,index_type):
         index[idx].append(node)
     return index
 
-
 class GeoHierarchy:
     def __init__(self, boundary_path,fname_save = "2023_AUS_Boundaries"):
         self.boundary_path = boundary_path
@@ -519,10 +518,10 @@ class GeoHierarchy:
     def search_nodes(self, level, parent_label=None): #, traverse=False):
         if parent_label is not None:
             node_ids = get_parents_with_label_traverse(self.G, level, parent_label)
+            assert len(node_ids) > 0, print("No areas were found, please fix search.")
         else:
-            node_ids = self.level_index[level] #(G,level)
+            node_ids = self.level_index[level]
         return node_to_gdf(self.G,node_ids)
-
 
 def polygons_within_radius(gdf,lat,lon,radius):
     """Find polygons within a given radius of a center point.
@@ -697,20 +696,6 @@ class Boundary(Datasets):
         node_ids = self.graph.get_nodes(level=level,label=label)
         return node_to_gdf(self.graph.G,node_ids)
 
-    def get_parents_with_level_recursive(self,node,level):
-        return get_parents_with_level(node,parent_level=level)
-    
-    def get_parents_with_label_recursive(self,node,label):
-        return get_parents_with_label(node,parent_label=label)
-    
-    def get_children_with_level_recursive(self,node,level):
-        node_ids = self.graph.get_children_with_level(node,child_level=level)
-        return node_to_gdf(self.graph.G,node_ids)
-    
-    def get_children_with_label_recursive(self,node,label):
-        node_ids = self.graph.get_children_with_label(node,child_label=label)
-        return node_to_gdf(self.graph.G,node_ids)
-    
     def get_country(self):
         #node_ids = self.graph.get_nodes_by_level(level="AUS")
         node_ids = self.graph.get_nodes(level="AUS")
@@ -752,10 +737,10 @@ class Boundary(Datasets):
         gdf = gdf[~gdf['label'].str.contains("Rest of")]
         return gdf
     
-    def get_sa1s(self,belonging_to=None):
+    def get_sa1(self,belonging_to=None):
         return self.graph.search_nodes(level="SA1",parent_label=belonging_to)
     
-    def get_sa2s(self,belonging_to=None):
+    def get_sa2(self,belonging_to=None):
         return self.graph.search_nodes(level="SA2",parent_label=belonging_to)
     
     def get_tr(self,belonging_to=None):
@@ -767,13 +752,13 @@ class Boundary(Datasets):
         node_ids = self.graph.get_nodes(level="SUA")
         return node_to_gdf(self.graph.G,node_ids)
     
-    def get_sa3s(self,belonging_to=None):
+    def get_sa3(self,belonging_to=None):
         if belonging_to is not None:
             return self.graph.search_nodes(level="SA3",parent_label=belonging_to)
         node_ids = self.graph.get_nodes(level="SA3")
         return node_to_gdf(self.graph.G,node_ids)
         
-    def get_sa4s(self,belonging_to=None,traverse=False):
+    def get_sa4(self,belonging_to=None,traverse=False):
         if belonging_to is not None:
             return self.graph.search_nodes(level="SA4",parent_label=belonging_to) #,traverse=traverse)
         node_ids = self.graph.get_nodes(level="SA4")
@@ -802,7 +787,21 @@ class Boundary(Datasets):
 
     #def set_radius(self,radius=10):
     #    self.gdf = polygons_within_radius(self.gdf,self.City.lat,self.City.lon,radius)
-
+    
+    def get_parents_with_level_recursive(self, node, level):
+        return get_parents_with_level(node,parent_level=level)
+    
+    def get_parents_with_label_recursive(self, node, label):
+        return get_parents_with_label(node,parent_label=label)
+    
+    def get_children_with_level_recursive(self, node, level):
+        node_ids = self.graph.get_children_with_level(node,child_level=level)
+        return node_to_gdf(self.graph.G,node_ids)
+    
+    def get_children_with_label_recursive(self,node, label):
+        node_ids = self.graph.get_children_with_label(node,child_label=label)
+        return node_to_gdf(self.graph.G,node_ids)
+    
     def pyvis(self,subG):
         nt = pyvisNetwork('500px', '100%')
         nt.from_nx(subG)
