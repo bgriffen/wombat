@@ -9,6 +9,94 @@ import fiona
 import networkx as nx
 import numpy as np
 from collections import deque
+from pyvis.network import Network as pyvisNetwork
+
+def has_parent_with_label(G, node, parent_label):
+    """Check if node has any parent (up to the root) with the specified label.
+    
+    Args:
+        G(networkx.Graph): The graph to search for nodes.
+        node: Node to start from.
+        parent_label (any type): The label of the parent to find.
+        
+    Returns:
+        bool: True if any parent with the specified label is found, False otherwise."""
+    
+    for parent in G.predecessors(node):
+        if parent_label in G.nodes[parent]['label']: # == parent_label:
+            return True
+        elif has_parent_with_label(G, parent, parent_label):  # Recursive call
+            return True
+    return False
+
+def get_nodes_by_level_and_parent_traverse(G, level, parent_label):
+    """Get nodes by level and parent label.
+    
+    Args:
+        G (networkx.Graph): The graph to search for nodes.
+        level (int): The level of nodes to retrieve.
+        parent_label (any type): The label of the parent node.
+    
+    Returns:
+        list: A list of nodes that belong to the specified level and have parent with the specified label.
+    """
+    
+    matched_nodes = []
+    for node in G.nodes:
+        # Check if the node is at the given level
+        if G.nodes[node]['level'] == level:
+            if has_parent_with_label(G, node, parent_label):
+                matched_nodes.append(node)
+    return matched_nodes
+
+def get_nodes_by_level_and_label(G, level, label):
+    """Get nodes by level and parent label.
+    
+    Args:
+        G (networkx.Graph): The graph to search for nodes.
+        level (int): The level of nodes to retrieve.
+        label (any type): The label of the node.
+    
+    Returns:
+        list: A list of nodes that belong to the specified level and with the specified label.
+    """
+    
+    matched_nodes = []
+    for node in G.nodes:
+        # Check if the node is at the given level
+        if G.nodes[node]['level'] == level and label in G.nodes[node]['label']:
+            matched_nodes.append(node)
+    return matched_nodes
+
+
+def get_nodes_by_level_and_parent(G, level, parent_label,traverse=False):
+    """Get nodes by level and parent label.
+    
+    Args:
+        G (networkx.Graph): The graph to search for nodes.
+        level (int): The level of nodes to retrieve.
+        parent_label (any type): The label of the parent node.
+    
+    Returns:
+        list: A list of nodes that belong to the specified level and have the specified parent node.
+    """
+    
+    matched_nodes = []
+    for node in G.nodes:
+        # Check if the node is at the given level
+        if G.nodes[node]['level'] == level:
+            # Check all predecessors (parents) of the node
+            parents = G.predecessors(node)
+            # Have to think more about how to search back up the tree
+            # if traverse:
+            #    parents_generator = bfs(G, node_id, depth, 'predecessors')
+            #   parents = [parent for parent in parents_generator]
+            for parent in parents:
+                # If the parent's label matches, add the node to the list
+                if parent_label in G.nodes[parent]['label']: # == parent_label:
+                    matched_nodes.append(node)
+                    break  # we've found a valid parent node so no need to check others
+    return matched_nodes
 
 def bfs(graph, start_node, depth, direction='successors'):
     queue = deque([(start_node, 0)])
@@ -62,7 +150,6 @@ def print_tree(G, node, depth, parents=False, children=True, cousins=False):
         print(title)
         for n in nodes_to_print:
             node_data = G.nodes[n]
-            print(node_data)
             if np.isfinite(node_data['area_sqkm']):
                 area = node_data['area_sqkm']
             else:
@@ -75,7 +162,6 @@ def print_tree(G, node, depth, parents=False, children=True, cousins=False):
     if parents:
         parents_generator = bfs(G, node_id, depth, 'predecessors')
         parents = [parent for parent in parents_generator]
-        print(node_info)
         print_nodes(parents, "Parents of {}:".format(node_info['label']))
 
     # get children
@@ -102,7 +188,7 @@ def get_node_by_label(G, target_label):
     
     for node in G.nodes(data=True):
         if 'label' in node[1]:  # node[1] is where data is stored in a Node Tuple
-            if node[1]['label'] == target_label:
+            if target_label in node[1]['label']: # == target_label:
                 return node
     return None
 
@@ -123,7 +209,7 @@ def get_nodes_by_level(G, level):
             matched_nodes.append(node)
     return matched_nodes
 
-def get_subnetwork(G, node, depth):
+def get_subnetwork(G, node, depth,remove_geometry=False):
     """Get the subnetwork of a given node in a graph up to a certain depth.
     
     Args:
@@ -136,6 +222,10 @@ def get_subnetwork(G, node, depth):
     """
     node_id = node[0]
     sub_G = nx.ego_graph(G, node_id, radius=depth)
+    if remove_geometry:
+        for nodei in sub_G.nodes:
+            if "geometry" in sub_G.nodes[nodei]:
+                del sub_G.nodes[nodei]['geometry']
     return sub_G
 
 class GeoHierarchy:
@@ -299,14 +389,23 @@ class GeoHierarchy:
     def get_node_by_label(self,label):
         return get_node_by_label(self.G,label)
     
-    def get_subnetwork(self, node, depth):
-        return get_subnetwork(self.G,node,depth)
+    def get_nodes_by_level_and_label(self,level,label):
+        return get_nodes_by_level_and_label(self.G,level,label)
+    
+    def get_nodes_by_level_and_parent(self,label,parent_label):
+        return get_nodes_by_level_and_parent(self.G, label, parent_label)
+            
+    def get_subnetwork(self, node, depth,remove_geometry=False):
+        return get_subnetwork(self.G,node,depth,remove_geometry)
     
     def get_parents(self,node,depth=1):
-        return bfs(self.G, node[0], depth=depth, direction='successors')
-             
+        parents = bfs(self.G, node[0], depth=depth, direction='predecessors')
+        return [self.G.nodes[n] for n in parents]
+    
     def get_children(self,node,depth=1):
-        return bfs(self.G, node[0], depth=depth, direction='predecessors')
+        children =  bfs(self.G, node[0], depth=depth, direction='successors')
+        return [self.G.nodes[c] for c in children]
+    
 
 def polygons_within_radius(gdf,lat,lon,radius):
     """Find polygons within a given radius of a center point.
@@ -355,6 +454,7 @@ Australia_BoundingBox_geom = Polygon([(Australia_BoundingBox['minx'],Australia_B
                                       (Australia_BoundingBox['maxx'],Australia_BoundingBox['maxy']),
                                       (Australia_BoundingBox['maxx'],Australia_BoundingBox['miny'])])
 
+        
 g = gpd.GeoSeries([Australia_BoundingBox_geom],crs="EPSG:4326")
 
 class StatisticalArea:
@@ -363,7 +463,7 @@ class StatisticalArea:
         self.layer = layer
         # https://www.abs.gov.au/statistics/standards/australian-statistical-geography-standard-asgs-edition-3/jul2021-jun2026/access-and-downloads/digital-boundary-files
         
-class Boundary(Datasets):
+class BoundaryJSON(Datasets):
     def __init__(self,dataset_path):
         super().__init__(dataset_path)
         self.dataset_path = dataset_path
@@ -394,6 +494,7 @@ class Boundary(Datasets):
                                          column_name=column_name,
                                          filter_value=filter_value)
         self.gdf = self.gdf[~self.gdf['geometry'].isna()]
+        
         if "SA4_NAME_2021" in self.gdf.columns:
             self.sa4s = sorted(list(set(self.gdf['SA4_NAME_2021'])))
         if "SA3_NAME_2021" in self.gdf.columns:
@@ -409,6 +510,105 @@ class Boundary(Datasets):
     def set_radius(self,radius=10):
         self.gdf = polygons_within_radius(self.gdf,self.City.lat,self.City.lon,radius)
 
+def node_to_gdf(G,node_ids):
+    #return gpd.GeoDataFrame(nodes,crs="EPSG:4326").sort_values(['level','label'])
+    gdf = gpd.GeoDataFrame([G.nodes[c] for c in node_ids],crs="EPSG:4326").sort_values(['level','label'])
+    gdf = gdf[~gdf['geometry'].isna()]
+    return gdf
+
+def search_parents(G,level,parent_label=None,traverse=False):
+    if parent_label is not None:
+        node_ids = get_nodes_by_level_and_parent_traverse(G, level, parent_label)
+    else:
+        node_ids = get_nodes_by_level(G,level)
+    return node_to_gdf(G,node_ids)
+    
+class Boundary(Datasets):
+    def __init__(self,dataset_path):
+        super().__init__(dataset_path)
+        self.dataset_path = dataset_path
+        
+        self.graph = GeoHierarchy(self.boundary_path)
+        self.graph.load()
+        
+        files = glob.glob(os.path.join(self.boundary_path,"*.gpkg"))
+        self.Areas = {}
+        for filei in files:
+            layers = fiona.listlayers(filei)
+            for l in layers:
+                self.Areas[l.split("_")[0]] = {'filename':filei,'layer':l}
+
+        self.Australia_BoundingBox_Poly = gpd.GeoDataFrame(geometry=g)
+
+    def get_boundaries_down(self,node):
+        nodes = self.graph.get_children(node,depth=1)
+        return gpd.GeoDataFrame(nodes,crs='EPSG:4326')
+    
+    def get_boundaries_up(self,node):
+        nodes = self.graph.get_parents(node,depth=1)
+        return gpd.GeoDataFrame(nodes,crs='EPSG:4326')
+    
+    def get_lgas(self,belonging_to=None,traverse=False):
+        #graph_to_name = {"QLD":"Queensland",
+        #                "NSW":"New South Wales",
+        #                "TAS":"Tasmania",
+        #                "WA":"Western Australia",
+        #                "SA":"South Australia",
+        #                "VIC":"Victoria",
+        #                "NT":"Northern Territory",
+        #                "ACT":"Australian Capital Territory"}
+        #node_ids = self.graph.get_nodes_by_level_and_parent("LGA",parent_label=graph_to_name[state])
+        #return gpd.GeoDataFrame([self.graph.G.nodes[c] for c in node_ids],crs="EPSG:4326").sort_values("label")
+        return search_parents(self.graph.G,"LGA",belonging_to,traverse)
+    
+    def get_country(self):
+        return search_parents(self.graph.G,"AUS")
+
+    def get_state(self,state):
+        return get_nodes_by_level_and_label(self.graph.G,label=state,level="STE")
+        
+    def get_states(self):
+        return search_parents(self.graph.G,"STE")
+
+    #def get_lgs(self,belonging_to=None,traverse=False):
+    def get_gccs(self):
+        node_ids = get_nodes_by_level(self.graph.G,"GCCSA")
+        gdf = node_to_gdf(self.graph.G,node_ids)
+        gdf = gdf[~gdf['label'].str.contains("Rest of")]
+        return gdf
+    
+    def get_gcc(self,city):
+        node_ids = get_nodes_by_level_and_label(self.graph.G,"GCCSA",label=city)
+        gdf = node_to_gdf(self.graph.G,node_ids)
+        gdf = gdf[~gdf['label'].str.contains("Rest of")]
+        return gdf
+    
+    def get_sa2s(self,belonging_to=None,traverse=False):
+        return search_parents(self.graph.G,"SA2",belonging_to,traverse)
+
+    def get_sa3s(self,belonging_to=None,traverse=False):
+        return search_parents(self.graph.G,"SA3",belonging_to,traverse)
+
+    def get_sa4s(self,belonging_to=None,traverse=False):
+        return search_parents(self.graph.G,"SA4",belonging_to,traverse)
+
+    def get_full_df(self,column_name=None,filter_value=None):
+        list_nodes = list(self.graph.G.nodes(data=True))
+        node_ids = [n[0] for n in list_nodes]
+        node_meta = [n[1] for n in list_nodes]
+        df = gpd.GeoDataFrame(node_meta,index=node_ids,crs='EPSG:4326')
+        if column_name is not None and filter_value is not None:
+            gdf = gdf[gdf[column_name] == filter_value]
+        return gdf
+
+    #def set_radius(self,radius=10):
+    #    self.gdf = polygons_within_radius(self.gdf,self.City.lat,self.City.lon,radius)
+
+    def pyvis(self,subG):
+        nt = pyvisNetwork('500px', '100%')
+        nt.from_nx(subG)
+        return nt
+        
 class OpenStreetMap:
     def __init__(self,dataset_path):
         self.dataset_path = dataset_path
