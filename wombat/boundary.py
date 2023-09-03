@@ -295,7 +295,7 @@ def get_subnetwork(G, node, depth,remove_geometry=False):
     Returns:
         networkx.Graph: The subnetwork of the given node up to the specified depth.
     """
-    node_id = node[0]
+    node_id = str(node.index[0])
     sub_G = nx.ego_graph(G, node_id, radius=depth)
     if remove_geometry:
         for nodei in sub_G.nodes:
@@ -311,7 +311,18 @@ def build_index(G,index_type):
             index[idx] = []
         index[idx].append(node)
     return index
+    
+def count_nodes_in_levels(level_index):
+    """Counts nodes at each level in level_index.
 
+    Args:
+        level_index (dict): Dictionary where keys are levels and values are lists of nodes.
+
+    Returns:
+        dict: A dictionary where keys are levels and values are the count of nodes at that level.
+    """
+    level_counts = {level: len(nodes) for level, nodes in level_index.items()}
+    return level_counts
 class GeoHierarchy:
     def __init__(self, boundary_path,fname_save = "2023_AUS_Boundaries"):
         self.boundary_path = boundary_path
@@ -481,18 +492,11 @@ class GeoHierarchy:
             self.level_index = build_index(self.G,'level')
             #nodes_at_level_x = level_index.get(x)
             self.label_index = build_index(self.G,'label')
+            self.level_counts = count_nodes_in_levels(self.level_index)
             
     def print_tree(self,node,depth=1,children=True,parents=False,cousins=False):
-        print_tree(self.G,node,depth,children=children,parents=parents,cousins=cousins)
-        
-    #def get_nodes_by_level(self,level):
-    #    return self.graph.get_nodes(level=level)   #get_nodes_by_level(self.G,level)
-    
-    #def get_node_by_label(self,label):
-    #    return self.graph.get_nodes(level=label) #get_node_by_label(self.G,label)
-    
-    #def get_nodes_by_level_and_label(self,level,label):
-    #    return get_nodes_by_level_and_label(self.G,level,label)
+        nodex = self.G.nodes[node.index]
+        print_tree(self.G,nodex,depth,children=children,parents=parents,cousins=cousins)
     
     def get_parents_with_label(self,label,parent_label):
         return get_parents_with_label(self.G, label, parent_label)
@@ -522,6 +526,16 @@ class GeoHierarchy:
         else:
             node_ids = self.level_index[level]
         return node_to_gdf(self.G,node_ids)
+    
+    def query(self, string_query, belonging_to=None, as_gdf=True):
+        if belonging_to is not None:
+            node_ids = self.search_nodes(level=string_query,parent_label=belonging_to)
+        else:
+            node_ids = self.get_nodes(level=string_query)
+        if as_gdf:
+            return node_to_gdf(self.G,node_ids)
+        else:
+            return node_ids
 
 def polygons_within_radius(gdf,lat,lon,radius):
     """Find polygons within a given radius of a center point.
@@ -638,6 +652,7 @@ def node_to_gdf(G,node_ids,level=None,label=None):
         gdf = gdf[gdf['label'] == label]
     return gdf
 
+
 class Boundary(Datasets):
     def __init__(self,dataset_path):
         super().__init__(dataset_path)
@@ -681,7 +696,7 @@ class Boundary(Datasets):
                 "UCL":"Urban Centres and Localities (UCLs) are aggregations of SA1s which meet population density criteria or contain other urban infrastructure. As populations and urban areas change, these UCLs are also designed to change, and areas can come into or out of the classification. This ensures meaningful data is available for urban areas and there are accurate comparisons over time."
                 }      
         #"Remoteness Areas divide Australia and the states and territories into 5 classes of remoteness on the basis of their relative access to services. Remoteness Areas are based on the Accessibility/Remoteness Index of Australia Plus (ARIA+), produced by the Hugo Centre for Population and Migration Studies.",                           
-        self.info = pd.DataFrame(info,columns=['Code','Description'])
+        self.info = pd.Series(info) #,columns=['Code','Description'])
 
     def get_boundaries_down(self,node,level=None,label=None):
         node_ids = self.graph.get_children(node,depth=1)
@@ -692,36 +707,40 @@ class Boundary(Datasets):
         node_ids = self.graph.get_parents(node,depth=1)
         return node_to_gdf(self.graph.G,node_ids)
     
-    def get_boundary(self,level=None,label=None):
+    def get_boundary(self,level,label,belonging_to=None,as_gdf=True):
+        if belonging_to is not None:
+            return self.graph.search_nodes(level=level,parent_label=belonging_to)
         node_ids = self.graph.get_nodes(level=level,label=label)
-        return node_to_gdf(self.graph.G,node_ids)
-
-    def get_country(self):
-        #node_ids = self.graph.get_nodes_by_level(level="AUS")
-        node_ids = self.graph.get_nodes(level="AUS")
-        return node_to_gdf(self.graph.G,node_ids)
-
-    def get_state(self,state):
+        if as_gdf:
+            return node_to_gdf(self.graph.G,node_ids)
+        else:
+            return node_ids
+        
+    def get_country(self,as_gdf=True):
+        return self.graph.query("AUS", None, as_gdf)
+    
+    def get_state(self,state,as_gdf=True):
         node_ids = self.graph.get_nodes(label=state,level="STATE")
         return node_to_gdf(self.graph.G,node_ids)
         
-    def get_states(self):
-        node_ids = self.graph.level_index["STATE"] #self.get_nodes_by_level(level="STE")
-        return node_to_gdf(self.graph.G,node_ids)
+    def get_states(self,as_gdf=True):
+        return self.graph.query("STATE", None, as_gdf)
     
-    def get_lgas(self,parent_label=None):
-        if parent_label is not None:
-            return self.graph.search_nodes("LGA",parent_label)
-        node_ids = self.graph.get_nodes(level="LGA")
-        return node_to_gdf(self.graph.G,node_ids)
+    def get_indigenous_regions(self,parent_label=None,as_gdf=True):
+        return self.graph.query("IREG", parent_label, as_gdf)
     
-    def get_meshblocks(self,parent_label=None):
-        if parent_label is not None:
-            return self.graph.search_nodes("MB",parent_label)
-        node_ids = self.graph.get_nodes(level="MB")
-        return node_to_gdf(self.graph.G,node_ids)
+    def get_indigenous_areas(self,parent_label,as_gdf=True):
+        return self.graph.query("IREA", parent_label, as_gdf)
     
-    #def get_lgs(self,belonging_to=None,traverse=False):
+    def get_lgas(self,parent_label=None,as_gdf=True):
+        return self.graph.query("LGA", parent_label, as_gdf)
+    
+    def get_electoral_divisions(self,parent_label=None,as_gdf=True):
+        return self.graph.query("CED", parent_label, as_gdf)
+    
+    def get_meshblocks(self,parent_label=None,as_gdf=True):
+        return self.graph.query("MB", parent_label, as_gdf)
+    
     def get_gccs(self):
         node_ids = get_nodes_by_level(self.graph.G,"GCCSA")
         gdf = node_to_gdf(self.graph.G,node_ids)
@@ -732,49 +751,27 @@ class Boundary(Datasets):
     def get_gcc(self,city):
         node_ids = get_nodes_by_level_and_label("GCCSA",label=city)
         self.graph.get_nodes(level="GGCSA",label=city)
-        
         gdf = node_to_gdf(node_ids)
         gdf = gdf[~gdf['label'].str.contains("Rest of")]
         return gdf
     
-    def get_sa1(self,belonging_to=None):
-        return self.graph.search_nodes(level="SA1",parent_label=belonging_to)
+    def get_sa1(self,belonging_to=None,as_gdf=True):
+        return self.graph.query("SA1", belonging_to, as_gdf)
     
-    def get_sa2(self,belonging_to=None):
-        return self.graph.search_nodes(level="SA2",parent_label=belonging_to)
+    def get_sa2(self,belonging_to=None,as_gdf=True):
+        return self.graph.query("SA2", belonging_to, as_gdf)
     
-    def get_tr(self,belonging_to=None):
-        return self.graph.search_nodes(level="TR",parent_label=belonging_to)
+    def get_sa3(self,belonging_to=None,as_gdf=True):
+        return self.graph.query("SA3", belonging_to, as_gdf)
     
-    def get_sua(self,belonging_to=None):
-        if belonging_to is not None:
-            return self.graph.search_nodes(level="SUA",parent_label=belonging_to)
-        node_ids = self.graph.get_nodes(level="SUA")
-        return node_to_gdf(self.graph.G,node_ids)
+    def get_sa4(self,belonging_to=None,as_gdf=True):
+        return self.graph.query("SA4", belonging_to, as_gdf)
     
-    def get_sa3(self,belonging_to=None):
-        if belonging_to is not None:
-            return self.graph.search_nodes(level="SA3",parent_label=belonging_to)
-        node_ids = self.graph.get_nodes(level="SA3")
-        return node_to_gdf(self.graph.G,node_ids)
-        
-    def get_sa4(self,belonging_to=None,traverse=False):
-        if belonging_to is not None:
-            return self.graph.search_nodes(level="SA4",parent_label=belonging_to) #,traverse=traverse)
-        node_ids = self.graph.get_nodes(level="SA4")
-        return node_to_gdf(self.graph.G,node_ids)
-        
-    def get_meshblocks(self,belonging_to=None,traverse=False):
-        if belonging_to is not None:
-            return self.graph.search_nodes(level="MB",parent_label=belonging_to) #,traverse=traverse)
-        node_ids = self.graph.get_nodes(level="MB")
-        return node_to_gdf(self.graph.G,node_ids)
+    def get_tr(self,belonging_to=None,as_gdf=True):
+        return self.graph.query("TR", belonging_to, as_gdf)
     
-    def get_nodes(self,level,belonging_to=None,traverse=False):
-        if belonging_to is not None:
-            return self.graph.search_nodes(level=level,parent_label=belonging_to) #,traverse=traverse)
-        node_ids = self.graph.get_nodes(level=level)
-        return node_to_gdf(self.graph.G,node_ids)
+    def get_sua(self,belonging_to=None,as_gdf=True):
+        return self.graph.query("SUA", belonging_to, as_gdf)
     
     def get_full_df(self,column_name=None,filter_value=None):
         list_nodes = list(self.graph.G.nodes(data=True))
@@ -806,7 +803,10 @@ class Boundary(Datasets):
         nt = pyvisNetwork('500px', '100%')
         nt.from_nx(subG)
         return nt
-        
+                     
+    def get_subnetwork(self, node, depth,remove_geometry=True):
+        return self.graph.get_subnetwork(node,depth,remove_geometry)
+    
 class OpenStreetMap:
     def __init__(self,dataset_path):
         self.dataset_path = dataset_path
