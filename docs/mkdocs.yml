@@ -48,6 +48,7 @@ nav:
         - Boundaries: Boundaries.ipynb
         - Schools: Schools.ipynb
         - Buildings: Buildings.ipynb
+        - Elevation: Elevation.ipynb
     - Notebooks:
         - Overture Maps: Overture.ipynb
     #- Methods:
