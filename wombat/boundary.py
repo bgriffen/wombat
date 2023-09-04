@@ -525,13 +525,14 @@ class GeoHierarchy:
             assert len(node_ids) > 0, print("No areas were found, please fix search.")
         else:
             node_ids = self.level_index[level]
-        return node_to_gdf(self.G,node_ids)
+        return node_ids #node_to_gdf(self.G,node_ids)
     
     def query(self, string_query, belonging_to=None, as_gdf=True):
         if belonging_to is not None:
             node_ids = self.search_nodes(level=string_query,parent_label=belonging_to)
         else:
             node_ids = self.get_nodes(level=string_query)
+        assert len(node_ids)>0, print("No objects found (node_ids)!!")
         if as_gdf:
             return node_to_gdf(self.G,node_ids)
         else:
@@ -729,7 +730,7 @@ class Boundary(Datasets):
     def get_indigenous_regions(self,parent_label=None,as_gdf=True):
         return self.graph.query("IREG", parent_label, as_gdf)
     
-    def get_indigenous_areas(self,parent_label,as_gdf=True):
+    def get_indigenous_areas(self,parent_label=None,as_gdf=True):
         return self.graph.query("IREA", parent_label, as_gdf)
     
     def get_lgas(self,parent_label=None,as_gdf=True):
@@ -741,19 +742,25 @@ class Boundary(Datasets):
     def get_meshblocks(self,parent_label=None,as_gdf=True):
         return self.graph.query("MB", parent_label, as_gdf)
     
-    def get_gccs(self):
+    def get_gccs(self,as_gdf=True):
         node_ids = get_nodes_by_level(self.graph.G,"GCCSA")
-        gdf = node_to_gdf(self.graph.G,node_ids)
-        gdf = gdf[~gdf['label'].str.contains("Rest of")]
-        gdf = gdf[~gdf['label'].str.contains("Other")]
-        return gdf
+        if as_gdf:
+            gdf = node_to_gdf(self.graph.G,node_ids)
+            gdf = gdf[~gdf['label'].str.contains("Rest of")]
+            gdf = gdf[~gdf['label'].str.contains("Other")]
+            return gdf
+        else:
+            return node_ids
     
     def get_gcc(self,city):
-        node_ids = get_nodes_by_level_and_label("GCCSA",label=city)
-        self.graph.get_nodes(level="GGCSA",label=city)
-        gdf = node_to_gdf(node_ids)
-        gdf = gdf[~gdf['label'].str.contains("Rest of")]
-        return gdf
+        #node_ids = get_nodes_by_level_and_label(self.graph.G,level="GCCSA",label=city)
+       # node_ids = self.graph.get_nodes(level="GGCSA",label=city)
+        #return self.graph.query("SA3", city, as_gdf=True)
+        return self.get_sa3(belonging_to=city)
+        
+        #gdf = node_to_gdf(node_ids)
+        #gdf = gdf[~gdf['label'].str.contains("Rest of")]
+        #return gdf
     
     def get_sa1(self,belonging_to=None,as_gdf=True):
         return self.graph.query("SA1", belonging_to, as_gdf)
