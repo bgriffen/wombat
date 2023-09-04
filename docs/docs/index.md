@@ -7,11 +7,11 @@ title: ""
 [![Build Status](https://travis-ci.com/bgriffen/wombat.svg?branch=master)](https://travis-ci.com/bgriffen/wombat)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Wombat is a Python toolkit designed help answer geospatial related questions about Australian cities & regions. A simple to use set of functionalities enable the querying of of a large number of open-source datasets *simultaneously*. These datasets range from aerial imagery, building morphology, census information (e.g. demographics), points of interest, elevation, flooding, education, property sale history and transport networks. The goal of wombat is to make it a good means to an ends, such that data products can be easily fed into other downstream geospatial analyses and visualisations.
-
 !!! info
 
     `wombat` is not yet available publicly as it is still in development. It will be released soon.
+
+Wombat is a Python toolkit designed help answer geospatial related questions about Australian cities & regions. A simple to use set of functionalities enable the querying of of a large number of open-source datasets *simultaneously*. These datasets range from aerial imagery, building morphology, census information (e.g. demographics), points of interest, elevation, flooding, education, property sale history and transport networks. The goal of wombat is to make it a good means to an ends, such that data products can be easily fed into other downstream geospatial analyses and visualisations.
 
 Lastly, this builds of the shoulders of many other works[^1][^2][^3][^4][^5] - thank you.
 
@@ -22,8 +22,9 @@ Lastly, this builds of the shoulders of many other works[^1][^2][^3][^4][^5] - t
 - [x] Interactive visualisations using [leafmap](https://leafmap.org/) (ipyleaflet, folium backends)
 - [x] Powered by Python with direct access to [GeoPandas](https://geopandas.org/en/stable/) dataframes for your custom analyses.
 - [x] Standardized post-processed datasets for local and rapid processing, including
+    * [x] [NetworkX](https://networkx.org/) graph handling of Statistical Areas.
     * [x] Combined [OSM + Microsoft building footprints](/building), including LiDAR height data
-    * [x] Historical property sale history for major cities (1M+ properties)
+    * [ ] Historical property sale history for major cities (1M+ properties) (coming soon)
     * [x] Points of interest combining OSM + Overture datasets
     * [x] Instant [30m resolution Digital Elevation Models](/elevation) (+viewsheds)
     * [x] [ACARA](https://www.acara.edu.au/) school performance metrics and overlays
