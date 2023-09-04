@@ -23,7 +23,7 @@ The Main Structure is developed by the ABS and is used to release and analyse a 
 * States and Territories (S/T) are a cartographic representation of legally designated state and territory boundaries.
 * Australia (AUS) is the largest region in the ASGS and represents the geographic extent of Australia.
 
-### Indigenous Structure
+### Indigenous Structures
 
 The Indigenous Structure enables the publication and analysis of statistics for the Aboriginal and Torres Strait Islander population of Australia. 
 
@@ -78,7 +78,7 @@ The structure of hierarchical statistical areas with multiple nestings shown in 
 
 `wombat` adopts the widely used Python library, `networkx` ([link](https://networkx.org/)), to construct a graph of the full hierachy of geometries, including non-ABS and indigenous structures. Each of these areas reflect `levels` in the hierarchy which are an attribute of each node with outbound edges to it's parent. The levels in `wombat` are coded as follows: 
 
-![img](./img/boundary/ASGS_Diagram_2021_wombat.png)
+![img](/img/boundary/ASGS_Diagram_2021_wombat.png)
 
 !!! note 
 
