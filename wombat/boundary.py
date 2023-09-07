@@ -339,19 +339,20 @@ class GeoHierarchy:
         # initialise root boundary node if graph file does not exist
         if not os.path.exists(self.fileout):
             full_fpath = os.path.join(self.boundary_path,'ASGS_2021_Main_Structure_GDA2020')+".gpkg"
-            df = gpd.read_file(full_fpath,layer='AUS_2021_AUST_GDA2020')
-            aus_row = df.iloc[0]
-            geometry = aus_row['geometry']
-            area_sqkm = aus_row['AREA_ALBERS_SQKM']
-            uri = aus_row['ASGS_LOCI_URI_2021']
-            label = aus_row['AUS_NAME_2021']
-            node_id = aus_row['AUS_CODE_2021']
-            self.G.add_node(node_id,
-                                label=label,
-                                uri=uri,
-                                geometry=geometry,
-                                area_sqkm=area_sqkm,
-                                level='AUS')
+            if os.path.exists(full_fpath):
+                df = gpd.read_file(full_fpath,layer='AUS_2021_AUST_GDA2020')
+                aus_row = df.iloc[0]
+                geometry = aus_row['geometry']
+                area_sqkm = aus_row['AREA_ALBERS_SQKM']
+                uri = aus_row['ASGS_LOCI_URI_2021']
+                label = aus_row['AUS_NAME_2021']
+                node_id = aus_row['AUS_CODE_2021']
+                self.G.add_node(node_id,
+                                    label=label,
+                                    uri=uri,
+                                    geometry=geometry,
+                                    area_sqkm=area_sqkm,
+                                    level='AUS')
             
     def construct_full_hierarchy(self):
         for fname in self.gpkg_files:
