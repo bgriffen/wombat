@@ -45,17 +45,13 @@ def graph_to_geopandas(item):
     return gpd.GeoDataFrame(item,crs='EPSG:4326')
     
 class Wombat(leafmap.Map):
-    def __init__(self,dataset_path,**kwargs): #='E:\\ResilioData\\Datasets\\wombatdata\\'
+    def __init__(self,dataset_path='E:\\ResilioData\\Datasets\\wombatdata\\',**kwargs): #
         super().__init__(**kwargs)
         
         self.dataset_path = dataset_path
         self.Datasets = Datasets(self.dataset_path)
         self.Boundary = Boundary(self.dataset_path)
         self.Elevation = Elevation(self.dataset_path)
-        #self.zoom = 10
-        #self.mymap.add_tile_layer(url="http://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", name = 'Google Satellite',attribution="Google", shown=False)
-        #self.Map = new_map(center=[-27.4698, 153.0251],zoom=self.zoom)
-        #self.country = country
     
     def set_area_as_country(self):
         self.gdf = self.Boundary.get_country()
@@ -89,6 +85,7 @@ class Wombat(leafmap.Map):
         #self.Viz = Viz(dataset_path=self.dataset_path,city=city,zoom=self.zoom)
         self.Schools = Schools(dataset_path=self.dataset_path,city=city)
         self.Elevation = Elevation(dataset_path=self.dataset_path,city=city)
+        self.Elevation.set_dataset('elvis')
         self.City = self.City = City(city)
         self.Datasets = Datasets(self.dataset_path,city=city)
         #self.map = leafmap.Map(location=[self.City.lat,self.City.lon],zoom_start=self.zoom)
