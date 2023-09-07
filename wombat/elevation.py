@@ -64,6 +64,30 @@ def compare_dems(data1,data2,extent1,extent2,title1="",title2=""):
     fig.update_xaxes(title_text='Longitude', row=1, col=2)
     return fig
 
+def plot_dem(data,extent):
+    """Plot a digital elevation model (DEM) using a heatmap.
+    
+    Args:
+        data (numpy.ndarray): The elevation data to be plotted.
+        extent (list): The extent of the data in the form [xmin, xmax, ymin, ymax].
+    
+    Returns:
+        plotly.graph_objects.Figure: The figure object containing the DEM plot.
+    """
+    fig = make_subplots(rows=1, cols=1)
+    heatmap2 = go.Heatmap(z=f,     
+                        x=np.linspace(extent[0],extent[1], num=data.shape[0]),
+                        y=np.linspace(extent[2],extent[3], num=data.shape[1]),
+                        hovertemplate='Elevation: %{z}<extra></extra>m',
+                        colorscale='Viridis', 
+                        showscale=True,
+                        colorbar=dict(title='Elevation'))
+    fig.add_trace(heatmap2, row=1, col=1)
+    fig.update_xaxes(title_text='Longitude', row=1, col=1)
+    fig.update_yaxes(title_text='Latitude', row=1, col=1)
+    fig.update_layout(autosize=False, width=800,height=800)
+    return fig
+
 def save_raster_gdal(input_ds, filename, array):
     """
     Save a raster from a numpy array 'array' with dimensions (X, Y)
@@ -176,7 +200,6 @@ class Elevation(Datasets):
         
         self.dataset = dataset
         if os.path.exists(fread):
-            print(fread)
             self.ds = gdal.Open(fread)
             #self.arr = self.ds.ReadAsArray()
             self.raster_proj = self.ds.GetProjection()
@@ -229,20 +252,20 @@ class Elevation(Datasets):
         self.elevation_data = self.ds.ReadAsArray(self.x_start, self.y_start, 
                                                   self.x_end-self.x_start, 
                                                   self.y_end-self.y_start)
-
-    #def plot_section_plotly(self):
-    def plot_elevation(self,include_points=False,gdf=None):
-        # Create a figure and axis to plot on
-        fig, ax = plt.subplots(constrained_layout=True)
-        
          # The extent parameter takes bounding box in the form of (left, right, bottom, top)
         lon_min = self.gt[0] + (self.x_start * self.gt[1])
         lon_max = self.gt[0] + (self.x_end * self.gt[1])
         lat_min = self.gt[3] + (self.y_end * self.gt[5])  # Note the swapped y_end and y_start due to pixel origin on top left
         lat_max = self.gt[3] + (self.y_start * self.gt[5])
+        self.extent = [lon_min, lon_max, lat_min, lat_max]
+        
+    #def plot_section_plotly(self):
+    def plot_elevation(self,include_points=False,gdf=None):
+        # Create a figure and axis to plot on
+        fig, ax = plt.subplots(constrained_layout=True)
 
         # Plot the elevation data
-        cax = ax.imshow(self.elevation_data, cmap='viridis', extent=[lon_min, lon_max, lat_min, lat_max])
+        cax = ax.imshow(self.elevation_data, cmap='viridis', extent=self.extent)
 
         if include_points:
             for lon,lat in zip(self.lons,self.lats):
@@ -266,6 +289,9 @@ class Elevation(Datasets):
         plt.title('Elevation Section')
         plt.show()
 
+    def plot_plotly_dem(self):
+        fig = plot_dem(self.elevation_data,extent=self.extent)
+        
     def save_section(self,filename='tmptif.tif'):
         
         x_res_degree = abs(self.gt[1])
@@ -282,16 +308,3 @@ class Elevation(Datasets):
         
         save_raster_gdal(self.ds, filename, self.elevation_data)
         
-
-
-#import wombat
-#w = wombat.Wombat()
-#lat,lon = wombat.datasets.caplatlon['Adelaide']
-#w.Elevation.get_elevation([lon],[lat])
-#w.Elevation.make_section(lon, lat, box_width_km=100)
-#w.Elevation.plot_elevation(include_points=True)
-#w.Boundary.load_states_territories()
-#gdf = w.Boundary.gdf_states_territories
-#w.Elevation.plot_elevation(include_points=True) #,gdf=gdf
-#w.Elevation.save_section()
-
