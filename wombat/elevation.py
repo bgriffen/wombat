@@ -361,7 +361,27 @@ def run_gdal_viewshed(x_index, y_index, a_nodata='-9999', f_format='GTiff', oz_v
            
     subprocess.call(cmd)
 
-
+def plot_vis_grid(visibility_grid,observer,title):
+    """Plot a visibility grid with an observer.
+    
+    Args:
+        visibility_grid (numpy.ndarray): The visibility grid to plot.
+        observer (tuple): The coordinates of the observer in the grid.
+        title (str): The title of the plot.
+    
+    Returns:
+        None
+    """
+    plt.figure(figsize=(6, 6))
+    plt.imshow(visibility_grid, cmap='viridis',origin='lower')
+    plt.plot(observer[1],observer[0],"r*",ms=25)
+    #plt.colorbar(cmin=0,cmin=1)
+    plt.title(title)
+    plt.xlabel('X-coordinate')
+    plt.ylabel('Y-coordinate')
+    plt.grid(True)
+    plt.show()
+    
 class Elevation(Datasets):
     def __init__(self,dataset_path,city=None):
         super().__init__(dataset_path,city)
