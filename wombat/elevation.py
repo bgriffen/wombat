@@ -381,6 +381,52 @@ def plot_vis_grid(visibility_grid,observer,title):
     plt.ylabel('Y-coordinate')
     plt.grid(True)
     plt.show()
+
+def plot_grid(grid, x1=None, y1=None, x2=None, y2=None, points=None):
+    """Plots a grid with optional points and line of sight.
+    
+    Args:
+        grid (numpy.ndarray): The grid to be plotted.
+        x1 (float, optional): The x-coordinate of the first point of interest. Defaults to None.
+        y1 (float, optional): The y-coordinate of the first point of interest. Defaults to None.
+        x2 (float, optional): The x-coordinate of the second point of interest. Defaults to None.
+        y2 (float, optional): The y-coordinate of the second point of interest. Defaults to None.
+        points (list, optional): List of points to be connected by a line. Defaults to None.
+    
+    Returns:
+        None
+    
+    Example:
+        grid = np.random.rand(10, 10)
+        x1, y1 = 2, 3
+        x2, y2 = 7, 8
+        points = [[2, 3], [4, 5], [6, 7], [7, 8]]
+        plot_grid(grid, x1, y1, x2, y2, points)
+    """
+    
+    plt.figure(figsize=(6, 6))
+    plt.imshow(grid, cmap='terrain',origin='lower')
+    plt.colorbar(label='Elevation')
+
+    # Mark source and target points
+    if x1 is not None and y1 is not None:
+        plt.scatter(x1,y1, color='white')
+        plt.text(x1,y1, 'POI1', color='white', ha='right')
+
+    if x2 is not None and y2 is not None:
+        plt.scatter(x2,y2, color='red')
+        plt.text(x2,y2, 'POI2', color='red', ha='right')
+
+    # Draw line of sight
+    if points is not None:
+        points = np.array(points)
+        plt.plot(points[:, 0], points[:, 1], 'k--')
+        
+    plt.title('Line of Sight')
+    plt.xlabel('X-coordinate')
+    plt.ylabel('Y-coordinate')
+    plt.grid(True)
+    plt.show()
     
 class Elevation(Datasets):
     def __init__(self,dataset_path,city=None):
