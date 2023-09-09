@@ -14,6 +14,104 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly
 
+# Function to find closest index
+def find_nearest(array, value):
+    array = np.asarray(array)
+    idx = (np.abs(array - value)).argmin()
+    return idx
+
+def generate_test_dem():
+    # Create a grid with simulated elevation data
+    # Create an x-y grid
+    x = np.linspace(-5, 5, 100)
+    y = np.linspace(-5, 5, 100)
+    X, Y = np.meshgrid(x, y)
+    # Create elevation data (a simple sin wave pattern here for demonstration)
+    Z = (
+        1*np.exp(-((X-2)**2 + (Y-2)**2)) +
+        0.7 * np.exp(-((X+1)**2 + (Y+1)**2)) +
+        0.9 * np.exp(-((X+2)**2 + (Y-4)**2))+
+        0.9 * np.exp(-((X+2)**2 + (Y-4)**2))
+    )
+
+    x = X.ravel()
+    y = Y.ravel()
+    z = Z.ravel()
+    return x,X,y,Y,z,Z
+
+    # Your position vector
+    #x_pos, y_pos = 1,2
+    #target = np.array([50,20,0.1]) #np.random.randint(0, 100, size=2)
+
+    # Compute the indices in the meshgrid corresponding to x_pos and y_pos:
+    #x_index = find_nearest(x, x_pos)
+    #y_index = find_nearest(y, y_pos)
+
+    # Fetch the height (elevation) from Z array
+    #elevation = Z[y_index][x_index] # Note: Use y_index first because of row/column order in 2D NumPy arrays
+
+def plot_test_dem(x,y,z,observer_x,observer_y,elevation):
+    """Plots a 3D mesh with an observer point.
+
+    Args:
+        x (list): List of x-coordinates of the mesh vertices.
+        y (list): List of y-coordinates of the mesh vertices.
+        z (list): List of z-coordinates of the mesh vertices.
+        observer_x (float): x-coordinate of the observer point.
+        observer_y (float): y-coordinate of the observer point.
+        elevation (float): Elevation of the observer point.
+
+    Returns:
+        go.Figure: A 3D plot figure.
+
+    Example:
+        x = [0, 1, 1, 0]
+        y = [0, 0, 1, 1]
+        z = [0, 0, 0, 0]
+        observer_x = 0.5
+        observer_y = 0.5
+        elevation = 1.0
+        plot = plot_test_dem(x, y, z, observer_x, observer_y, elevation)
+        plot.show()
+    """
+    fig = go.Figure(data=[go.Mesh3d(x=x, y=y, z=z, color='lightpink', opacity=0.50)])
+
+    fig.update_layout(
+        autosize=False,
+        width=1100,
+        height=800,
+        paper_bgcolor="LightSteelBlue",
+        margin=dict(l=10, r=10, t=10, b=0), # new margin parameters
+        scene=dict(
+            camera=dict(eye=dict(x=2, y=1.5, z=0.7)),
+            xaxis=dict(title_text='Longitude',
+                    backgroundcolor="rgb(200, 200, 230)",
+                    gridcolor="white",
+                    showbackground=True,
+                    zerolinecolor="white"),
+            yaxis=dict(title_text='Latitude',
+                    backgroundcolor="rgb(230, 200,230)",
+                    gridcolor="white",
+                    showbackground=True,
+                    zerolinecolor="white"),
+            zaxis=dict(title_text='Elevation',
+                    backgroundcolor="rgb(230, 230,200)",
+                    gridcolor="white",
+                    showbackground=True,
+                    zerolinecolor="white"),
+            aspectmode = 'manual',
+            dragmode = 'turntable',
+        ),
+
+    )
+
+    fig.add_trace(go.Scatter3d(x=[observer_x], y=[observer_y], z=[elevation],
+                            mode='markers',
+                            marker=dict(size=6, color='green'),
+                            name='Observer'))
+
+    return fig
+
 def compare_dems(data1,data2,extent1,extent2,title1="",title2=""):
     """Compares two elevation datset and creates a plotly figure with two heatmaps.
     
@@ -183,7 +281,87 @@ def latlon_to_elevation(ds,gt, lons,lats):
     for i in range(len(lons)):
         elevations[i] = ds.ReadAsArray(xs[i], ys[i], 1, 1)[0][0]
     return elevations
+
+def visibility_map_target(elevation_grid, point):
+    """Determines the visibility map for a target point in an elevation grid.
     
+    Args:
+        elevation_grid (numpy.ndarray): 2D array representing the elevation grid.
+        point (tuple): Tuple containing the x, y, and h coordinates of the target point.
+    
+    Returns:
+        numpy.ndarray: 2D array representing the visibility map, where True indicates visibility and False indicates non-visibility.
+    """
+    # Which Spots Can See The Target?
+    x, y, h = point
+    x = int(x)
+    y = int(y)
+    visible = np.ones_like(elevation_grid, dtype=bool)
+    nrows, ncols = elevation_grid.shape
+
+    # Iterate over all points in the grid
+    for i in np.arange(nrows):
+        for j in np.arange(ncols):
+            line = list(bresenham(i, j, x, y))  # Switched order here
+
+            highest_point = elevation_grid[i, j]  # Start with height at point (i,j)
+
+            for xi, yi in line[1:]:  # Skip first point which is (i,j) itself
+                if elevation_grid[xi, yi] > highest_point:
+                    highest_point = elevation_grid[xi, yi]
+                    if highest_point > h:  # If any point on the line is higher than the target, it's not visible
+                        visible[i, j] = False
+                        break  # No need to check rest of the line
+
+    return visible
+
+def visibility_map_source(elevation_grid, point):
+    """Calculates the visibility map for a given elevation grid and target point.
+    
+    Args:
+        elevation_grid (numpy.ndarray): 2D array representing the elevation grid.
+        point (tuple): Tuple containing the x, y, and h coordinates of the target point.
+    
+    Returns:
+        numpy.ndarray: 2D boolean array representing the visibility map, where True indicates visible spots and False indicates non-visible spots.
+    """
+    # Which Spots Can The Target See
+    x,y,h = point
+    x = int(x)
+    y = int(y)
+    visible = np.zeros_like(elevation_grid, dtype=bool)
+    nrows, ncols = elevation_grid.shape
+    for i in np.arange(nrows):
+        for j in np.arange(ncols):
+            line = list(bresenham(x, y, i, j))
+            # check if there is a point taller than our target on the line of sight
+            for xi, yi in line:
+                if not (h >= elevation_grid[xi, yi]).any():
+                    visible[i,j] = True
+    return visible
+
+import subprocess
+
+def run_gdal_viewshed(x_index, y_index, a_nodata='-9999', f_format='GTiff', oz_value='0.01', tz_value='0,01', md_value='100', 
+                      cc_value='0', mode='NORMAL', input_file='input.tif', output_file='output.tif'):
+    cmd = ['gdal_viewshed',
+           '-b', '1', 
+           '-a_nodata', a_nodata, 
+           '-f', f_format,
+           '-oz', oz_value,     
+           '-tz', tz_value,     
+           '-md', md_value,
+           '-ox', str(x_index),
+           '-oy', str(y_index),    
+           '-cc', cc_value,
+           '-q',
+           '-om', mode,
+           input_file,
+           output_file]
+           
+    subprocess.call(cmd)
+
+
 class Elevation(Datasets):
     def __init__(self,dataset_path,city=None):
         super().__init__(dataset_path,city)
