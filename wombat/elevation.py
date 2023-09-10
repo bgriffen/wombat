@@ -503,6 +503,40 @@ class Elevation(Datasets):
         lat_max = self.gt[3] + (self.y_start * self.gt[5])
         self.extent = [lon_min, lon_max, lat_min, lat_max]
         
+    def save_subregion(self, output_filename):
+        # Create a new geotransform where the origin is moved to the start of the subarray
+        new_gt = list(self.gt)
+        new_gt[0] += self.x_start*self.gt[1]
+        new_gt[3] += self.y_start*self.gt[5]
+
+        # Create in-memory dataset
+        mem_drv = gdal.GetDriverByName('MEM')
+        if mem_drv is None:
+            print('MEM driver not available')
+            sys.exit(1)
+
+        new_y_size, new_x_size = self.elevation_data.shape
+        dst_ds = mem_drv.Create('', new_x_size, new_y_size, 1, gdal.GDT_Float32)
+
+        # Apply the geotransform and projection to the memory dataset
+        dst_ds.SetGeoTransform(new_gt)
+        dst_ds.SetProjection(self.source_srs.ExportToWkt())
+
+        # Write the data array to the memory dataset
+        dst_ds.GetRasterBand(1).WriteArray(self.elevation_data)
+
+        # Create output GeoTIFF driver  
+        gTiff_driver = gdal.GetDriverByName("GTiff")
+        out_ds = gTiff_driver.CreateCopy(output_filename, dst_ds)
+
+        # Properly close the datasets to flush to disk
+        dst_ds = None
+        out_ds = None
+        
+        print(f'GeoTiff {output_filename} created successfully')
+
+# Now you can save the subregion with this function
+
     #def plot_section_plotly(self):
     def plot_elevation(self,include_points=False,gdf=None):
         # Create a figure and axis to plot on
