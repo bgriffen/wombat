@@ -48,7 +48,7 @@ Wombat is a Python toolkit designed help answer geospatial related questions abo
 
 ## Datasets
 
-wombat draws on a number of off-the-shelf datasets as well as post-processed datasets. Nearly all datasets of siginificant size are stored locally. In some cases, datsets are streamed from various online sources but only where the bandwidth requirements are modest (e.g. population tile data). The data sources can be broken down into broadly three categories, Government, Public, post-processed.
+`wombat` draws on a number of off-the-shelf datasets as well as post-processed datasets. Nearly all datasets of siginificant size are stored locally. In some cases, datsets are streamed from various online sources but only where the bandwidth requirements are modest (e.g. population tile data). The data sources can be broken down into broadly three categories, Government, Public, post-processed.
 
 | Category  | Goverment | Open | Brisbane | Sydney | Melbourne | Perth | Adelaide | Hobart | Canberra | Darwin |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
