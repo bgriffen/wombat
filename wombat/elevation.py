@@ -147,7 +147,7 @@ def compare_dems(data1,data2,extent1,extent2,title1="",title2=""):
 
     heatmap2 = go.Heatmap(z=data2,     
                         x=np.linspace(extent2[0],extent2[1], num=data2.shape[0]),
-                        y=np.linspace(extent2[2],extent2[3], num=data2.shape[1]),
+                        y=np.linspace(extent2[3],extent2[2], num=data2.shape[1]),
                         hovertemplate='Elevation: %{z}<extra></extra>m',
                         colorscale='Viridis', 
                         showscale=True,
@@ -173,17 +173,17 @@ def plot_dem(data,extent):
         plotly.graph_objects.Figure: The figure object containing the DEM plot.
     """
     fig = make_subplots(rows=1, cols=1)
-    heatmap2 = go.Heatmap(z=f,     
+    heatmap2 = go.Heatmap(z=data,     
                         x=np.linspace(extent[0],extent[1], num=data.shape[0]),
-                        y=np.linspace(extent[2],extent[3], num=data.shape[1]),
-                        hovertemplate='Elevation: %{z}<extra></extra>m',
+                        y=np.linspace(extent[3],extent[2], num=data.shape[1]),
+                        hovertemplate='Elevation: %{z:.2f}<extra></extra>m',
                         colorscale='Viridis', 
                         showscale=True,
                         colorbar=dict(title='Elevation'))
     fig.add_trace(heatmap2, row=1, col=1)
     fig.update_xaxes(title_text='Longitude', row=1, col=1)
     fig.update_yaxes(title_text='Latitude', row=1, col=1)
-    fig.update_layout(autosize=False, width=800,height=800)
+    fig.update_layout(autosize=False, width=600,height=600)
     return fig
 
 def save_raster_gdal(input_ds, filename, array):
@@ -435,9 +435,9 @@ class Elevation(Datasets):
         if city is not None:
             self.City = City(city)
     
-    def set_dataset(self,dataset='elvis'):
-        assert dataset in ['elvis','fabdem'],print("Please use either 'elvis' or 'fabdem'.")
-        if dataset == "elvis":
+    def set_dataset(self,dataset='ELVIS'):
+        assert dataset in ['ELVIS','fabdem'],print("Please use either 'ELVIS' or 'fabdem'.")
+        if dataset == "ELVIS":
             fread = self.elevation_tif_filename_elvis
         elif dataset == "fabdem":
             fread = self.elevation_tif_filename_FABDEM
@@ -568,7 +568,7 @@ class Elevation(Datasets):
         plt.show()
 
     def plot_plotly_dem(self):
-        fig = plot_dem(self.elevation_data,extent=self.extent)
+        return plot_dem(self.elevation_data,extent=self.extent)
         
     def save_section(self,filename='tmptif.tif'):
         
