@@ -60,7 +60,7 @@ wombat draws on a number of off-the-shelf datasets as well as post-processed dat
 | Buildings |  | [Overture](https://overturemaps.org/), [OSM Buildings](https://osmbuildings.org/), [Microsoft](https://github.com/microsoft/GlobalMLBuildingFootprints) | :material-check: | :material-check: | :material-check: | :material-check: | :material-check: | :material-check: | :material-check: | :material-check: |
 | POIs | | [Overture](https://overturemaps.org/), [OSM POIs](https://openpoimap.org/) | :material-check: | :material-check: | :material-check: | :material-check: | :material-check: | :material-check: | :material-check: | :material-check: |
 | Transport | |  [GTFS](https://gtfs.org/) | :material-check: | :material-close: | :material-close: | :material-close: | :material-close: | :material-close: | :material-close: | :material-close: |
-| Noise | |  [GTFS](https://www.data.brisbane.qld.gov.au/data/dataset/city-plan-2014-transport-noise-corridor-overlay) | :material-check: | :material-close: | :material-close: | :material-close: | :material-close: | :material-close: | :material-close: | :material-close: |
+| Noise | City Plans |  | :material-check: | :material-close: | :material-close: | :material-close: | :material-close: | :material-close: | :material-close: | :material-close: |
 
 ## License
 
