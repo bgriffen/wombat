@@ -1,4 +1,3 @@
-
 ![My Logo](wombat.png)
 
 [![Build Status](https://travis-ci.com/bgriffen/wombat.svg?branch=master)](https://travis-ci.com/bgriffen/wombat)
